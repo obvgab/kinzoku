@@ -1,11 +1,11 @@
 import Wgpu
 
 public struct KZAdapter {
-    public var c: WGPUAdapter?
+    public var c: WGPUAdapter
     
     #if !os(macOS)
     public func enumerateFeatures() -> [KZFeature] {
-        var feature: UnsafeMutablePointer<WGPUFeature>? = nil
+        var feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
         let count = wgpuAdapterEnumerateFeatures(c, feature)
         
         guard let buffer = feature?.withMemoryRebound(to: KZFeature.self, capacity: count, { pointer in
@@ -20,51 +20,15 @@ public struct KZAdapter {
         var limitHolder = WGPUSupportedLimits()
         wgpuAdapterGetLimits(c, &limitHolder)
         
-        return KZLimits(
-            required: false,
-            c_supported: limitHolder,
-            
-            nextInChain: limitHolder.nextInChain,
-            
-            maxTextureDimension1D: limitHolder.limits.maxTextureDimension1D,
-            maxTextureDimension2D: limitHolder.limits.maxTextureDimension2D,
-            maxTextureDimension3D: limitHolder.limits.maxTextureDimension3D,
-            
-            maxTextureArrayLayers: limitHolder.limits.maxTextureArrayLayers,
-            maxBindGroups: limitHolder.limits.maxBindGroups,
-            
-            maxDynamicUniformBuffersPerPipelineLayout: limitHolder.limits.maxDynamicUniformBuffersPerPipelineLayout,
-            maxDynamicStorageBuffersPerPipelineLayout: limitHolder.limits.maxDynamicStorageBuffersPerPipelineLayout,
-            
-            maxSampledTexturesPerShaderStage: limitHolder.limits.maxSampledTexturesPerShaderStage,
-            maxSamplersPerShaderStage: limitHolder.limits.maxSamplersPerShaderStage,
-            maxStorageBuffersPerShaderStage: limitHolder.limits.maxStorageBuffersPerShaderStage,
-            maxStorageTexturesPerShaderStage: limitHolder.limits.maxStorageTexturesPerShaderStage,
-            maxUniformBuffersPerShaderStage: limitHolder.limits.maxUniformBuffersPerShaderStage,
-            
-            maxUniformBufferBindingSize: limitHolder.limits.maxUniformBufferBindingSize,
-            maxStorageBufferBindingSize: limitHolder.limits.maxStorageBufferBindingSize,
-            minUniformBufferOffsetAlignment: limitHolder.limits.minUniformBufferOffsetAlignment,
-            minStorageBufferOffsetAlignment: limitHolder.limits.minStorageBufferOffsetAlignment,
-            
-            maxVertexBuffers: limitHolder.limits.maxVertexBuffers,
-            maxVertexAttributes: limitHolder.limits.maxVertexAttributes,
-            maxVertexBufferArrayStride: limitHolder.limits.maxVertexBufferArrayStride,
-            
-            maxInterStageShaderComponents: limitHolder.limits.maxInterStageShaderComponents,
-            
-            maxComputeWorkgroupStorageSize: limitHolder.limits.maxComputeWorkgroupStorageSize,
-            maxComputeInvocationsPerWorkgroup: limitHolder.limits.maxComputeInvocationsPerWorkgroup,
-            maxComputeWorkgroupSizeX: limitHolder.limits.maxComputeWorkgroupSizeX,
-            maxComputeWorkgroupSizeY: limitHolder.limits.maxComputeWorkgroupSizeY,
-            maxComputeWorkgroupSizeZ: limitHolder.limits.maxComputeWorkgroupSizeZ,
-            maxComputeWorkgroupsPerDimension: limitHolder.limits.maxComputeWorkgroupsPerDimension
-        )
+        return limitHolder.limits as KZLimits // Throws away Required/Supported
     }
     
     public func getProperties() -> KZProperties {
         var propertiesHolder = WGPUAdapterProperties()
         wgpuAdapterGetProperties(c, &propertiesHolder)
+        
+        let name = (propertiesHolder.name == nil) ? "Unknown Device" : String(cString: propertiesHolder.name)
+        let driverDescription = (propertiesHolder.driverDescription == nil) ? "Empty Description" : String(cString: propertiesHolder.driverDescription)
         
         return KZProperties(
             nextInChain: propertiesHolder.nextInChain,
@@ -72,8 +36,8 @@ public struct KZAdapter {
             vendorID: propertiesHolder.vendorID,
             deviceID: propertiesHolder.deviceID,
             
-            name: String(cString: propertiesHolder.name), // We should seriously handle nil on these Strings
-            driverDescripton: "", //String(cString: propertiesHolder.driverDescription),
+            name: name,
+            driverDescripton: driverDescription,
             
             type: KZAdapterType(rawValue: propertiesHolder.adapterType.rawValue) ?? .unknown,
             backend: KZBackendType(rawValue: propertiesHolder.backendType.rawValue) ?? .null
@@ -86,87 +50,52 @@ public struct KZAdapter {
     }
     #endif
     
-    public typealias DeviceRequestCallback = (_ status: KZDeviceRequestStatus?, _ device: inout KZDevice?, _ message: String, _ userdata: UnsafeRawPointer?) -> Void
-    public class DeviceRequestCallbackHandle { var callback: DeviceRequestCallback; var device: KZDevice? = nil; var userdata: UnsafeRawPointer?; init(callback: @escaping DeviceRequestCallback) { self.callback = callback } }
     public func requestDevice(
-        nextInChain: UnsafePointer<WGPUChainedStruct>? = nil,
-        label: String = "device",
-        requiredFeatures: [KZFeature] = [],
+        chain: UnsafePointer<WGPUChainedStruct>? = nil,
+        label: String? = nil,
+        features: [KZFeature] = [],
         limits: inout KZLimits,
-        queueNextInChain: UnsafePointer<WGPUChainedStruct>? = nil,
-        queueLabel: String = "queue",
-        callback: @escaping DeviceRequestCallback,
-        userdata: UnsafeRawPointer? = nil
-    ) -> KZDevice? {
-        if !limits.required { print("Must be a RequiredLimit, not SupportedLimit"); return nil } // Replace with log at some point
+        queueChain: UnsafePointer<WGPUChainedStruct>? = nil,
+        queueLabel: String? = nil
+    ) -> (KZDevice, KZQueue, KZDeviceRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
+        let tuplePointer = UnsafeMutablePointer<(WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String)>.allocate(capacity: 1)
+        defer { tuplePointer.deallocate() }
         
-        let featureCount = UInt32(requiredFeatures.count)
-        var features: [WGPUFeatureName] = [WGPUFeatureName(0x00000000)] // Default value to not have an array index issue--should replace later
-        if featureCount > 0 { features = requiredFeatures.map { WGPUFeatureName($0.rawValue) } }
+        let label = label == nil ? "\(c.hashValue)::KZDevice" : label!
+        let queueLabel = queueLabel == nil ? "\(c.hashValue)::KZQueue" : queueLabel!
         
-        var descriptor = WGPUDeviceDescriptor(nextInChain: nextInChain, label: label, requiredFeaturesCount: featureCount, requiredFeatures: &features[0], requiredLimits: &limits.c_required!, defaultQueue: WGPUQueueDescriptor(nextInChain: queueNextInChain, label: queueLabel))
-        let handle = DeviceRequestCallbackHandle(callback: callback)
+        var features = features.count > 0 ? features.map { name in WGPUFeatureName(name.rawValue) } : [WGPUFeatureName(.zero)]
+        var requiredLimits = WGPURequiredLimits(nextInChain: nil, limits: limits)
         
-        wgpuAdapterRequestDevice(c, &descriptor, { c_status, c_device, c_message, unmanagedCallback in
-            var message = ""; if let c_message { message = String(cString: c_message) }
-            let unmanagedHandle = Unmanaged<DeviceRequestCallbackHandle>.fromOpaque(unmanagedCallback!).takeUnretainedValue()
+        var descriptor = WGPUDeviceDescriptor(
+            nextInChain: chain,
+            label: label,
+            requiredFeaturesCount: UInt32(features.count),
+            requiredFeatures: &features[0],
+            requiredLimits: &requiredLimits,
+            defaultQueue: WGPUQueueDescriptor(nextInChain: queueChain, label: queueLabel)
+        )
+        
+        wgpuAdapterRequestDevice(c, &descriptor, { status, device, message, rawTuplePointer in
+            let rebound = rawTuplePointer!.bindMemory(to: (WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String).self, capacity: 1)
             
-            unmanagedHandle.device = KZDevice(c: c_device)
+            if let device = device { rebound.pointee.0 = device }
+            if let message = message { rebound.pointee.3 = String(cString: message) } else { rebound.pointee.3 = "" }
             
-            unmanagedHandle.callback(
-                KZDeviceRequestStatus(rawValue: c_status.rawValue),
-                &unmanagedHandle.device,
-                message,
-                unmanagedHandle.userdata
-            )
-        }, Unmanaged.passUnretained(handle).toOpaque())
+            rebound.pointee.2 = status
+            rebound.pointee.1 = wgpuDeviceGetQueue(device)
+        }, tuplePointer)
         
-        return handle.device
+        return (
+            KZDevice(c: tuplePointer.pointee.0),
+            KZQueue(c: tuplePointer.pointee.1),
+            KZDeviceRequestStatus(rawValue: tuplePointer.pointee.2.rawValue) ?? .unknown,
+            tuplePointer.pointee.3
+        )
     }
 }
 
-public struct KZLimits { // TODO: Make an init function that assigns the c_required/c_supported values
-    public var required = false
-    public var c_required: WGPURequiredLimits? = nil
-    public var c_supported: WGPUSupportedLimits? = nil
-    
-    public var nextInChain: UnsafePointer<WGPUChainedStructOut>? = nil // TODO: ChainedStruct Pointer
-    
-    // Limits
-    public var maxTextureDimension1D: UInt32
-    public var maxTextureDimension2D: UInt32
-    public var maxTextureDimension3D: UInt32
-    
-    public var maxTextureArrayLayers: UInt32
-    public var maxBindGroups: UInt32
-    
-    public var maxDynamicUniformBuffersPerPipelineLayout: UInt32
-    public var maxDynamicStorageBuffersPerPipelineLayout: UInt32
-    
-    public var maxSampledTexturesPerShaderStage: UInt32
-    public var maxSamplersPerShaderStage: UInt32
-    public var maxStorageBuffersPerShaderStage: UInt32
-    public var maxStorageTexturesPerShaderStage: UInt32
-    public var maxUniformBuffersPerShaderStage: UInt32
-    
-    public var maxUniformBufferBindingSize: UInt64
-    public var maxStorageBufferBindingSize: UInt64
-    public var minUniformBufferOffsetAlignment: UInt32
-    public var minStorageBufferOffsetAlignment: UInt32
-    
-    public var maxVertexBuffers: UInt32
-    public var maxVertexAttributes: UInt32
-    public var maxVertexBufferArrayStride: UInt32
-    
-    public var maxInterStageShaderComponents: UInt32
-    
-    public var maxComputeWorkgroupStorageSize: UInt32
-    public var maxComputeInvocationsPerWorkgroup: UInt32
-    public var maxComputeWorkgroupSizeX: UInt32
-    public var maxComputeWorkgroupSizeY: UInt32
-    public var maxComputeWorkgroupSizeZ: UInt32
-    public var maxComputeWorkgroupsPerDimension: UInt32
-}
+public typealias KZLimits = WGPULimits
 
 public struct KZProperties {
     public var nextInChain: UnsafePointer<WGPUChainedStructOut>? = nil // TODO: ChainedStruct Pointer
@@ -198,14 +127,6 @@ public enum KZBackendType: UInt32 {
     case vulkan = 0x00000005
     case openGL = 0x00000006
     case openGLES = 0x00000007
-    case force32 = 0x7FFFFFFF
-}
-
-public enum KZAdapterRequestStatus: UInt32 {
-    case success = 0x00000000
-    case unavailable = 0x00000001
-    case error = 0x00000002
-    case unknown = 0x00000003
     case force32 = 0x7FFFFFFF
 }
 

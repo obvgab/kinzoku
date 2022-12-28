@@ -1,6 +1,6 @@
 import Wgpu
 
-public class KZInstance {
+public struct KZInstance {
     public var c: WGPUInstance
     
     public init(
@@ -11,49 +11,59 @@ public class KZInstance {
     }
     
     public func createSurface(
-        nextInChain: UnsafePointer<WGPUChainedStruct>? = nil,
-        label: String = "surface"
+        chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: ChainedStruct Pointer
+        label: String? = nil
     ) -> KZSurface {
-        var descriptor = WGPUSurfaceDescriptor(nextInChain: nextInChain, label: label)
+        let label = label == nil ? "\(c.hashValue)::KZSurface" : label!
+        var descriptor = WGPUSurfaceDescriptor(nextInChain: chain, label: label)
         return KZSurface(wgpuInstanceCreateSurface(c, &descriptor))
     }
     
-    // Omitted due to exclusion on macOS
-    /*
+    #if !os(macOS)
     public func processEvents() {
         wgpuInstanceProcessEvents(c)
     }
-    */
+    #endif
     
-    public typealias AdapterRequestCallback = (_ status: KZAdapterRequestStatus?, _ adapter: inout KZAdapter?, _ message: String, _ userdata: UnsafeRawPointer?) -> Void
-    public class AdapterRequestCallbackHandle { var callback: AdapterRequestCallback; var adapter: KZAdapter? = nil; var userdata: UnsafeRawPointer?; init(callback: @escaping AdapterRequestCallback) { self.callback = callback } }
     public func requestAdapter(
-        nextInChain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: ChainedStruct pointer
-        compatibleSurface: WGPUSurface? = nil, // TODO: Surface struct
-        powerPreference: KZPowerPreference = .undefined,
-        forceFallbackAdapter: Bool = false,
-        callback: @escaping AdapterRequestCallback,
-        userdata: UnsafeRawPointer? = nil
-    ) -> KZAdapter? {
-        var options = WGPURequestAdapterOptions(nextInChain: nextInChain, compatibleSurface: compatibleSurface, powerPreference: WGPUPowerPreference(powerPreference.rawValue), forceFallbackAdapter: forceFallbackAdapter)
-        let handle = AdapterRequestCallbackHandle(callback: callback)
+        chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: ChainedStruct pointer
+        surface: WGPUSurface? = nil, // TODO: Surface struct
+        power: KZPowerPreference = .undefined,
+        fallback: Bool = false
+    ) -> (KZAdapter, KZAdapterRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
+        let tuplePointer = UnsafeMutablePointer<(WGPUAdapter, WGPURequestAdapterStatus, String)>.allocate(capacity: 1)
+        defer { tuplePointer.deallocate() }
         
-        wgpuInstanceRequestAdapter(c, &options, {c_status, c_adapter, c_message, unmanagedCallback in
-            var message = ""; if let c_message { message = String(cString: c_message) }
-            let unmanagedHandle = Unmanaged<AdapterRequestCallbackHandle>.fromOpaque(unmanagedCallback!).takeUnretainedValue()
-            
-            unmanagedHandle.adapter = KZAdapter(c: c_adapter)
-            
-            unmanagedHandle.callback(
-                KZAdapterRequestStatus(rawValue: c_status.rawValue),
-                &unmanagedHandle.adapter,
-                message,
-                unmanagedHandle.userdata
-            )
-        }, Unmanaged.passUnretained(handle).toOpaque())
+        var options = WGPURequestAdapterOptions(
+            nextInChain: chain,
+            compatibleSurface: surface,
+            powerPreference: WGPUPowerPreference(power.rawValue),
+            forceFallbackAdapter: fallback
+        )
         
-        return handle.adapter
+        wgpuInstanceRequestAdapter(c, &options, { status, adapter, message, rawTuplePointer in
+            let rebound = rawTuplePointer!.bindMemory(to: (WGPUAdapter, WGPURequestAdapterStatus, String).self, capacity: 1)
+            
+            if let adapter = adapter { rebound.pointee.0 = adapter }
+            if let message = message { rebound.pointee.2 = String(cString: message) } else { rebound.pointee.2 = "" }
+            
+            rebound.pointee.1 = status
+        }, tuplePointer)
+        
+        return (
+            KZAdapter(c: tuplePointer.pointee.0),
+            KZAdapterRequestStatus(rawValue: tuplePointer.pointee.1.rawValue) ?? .unknown,
+            tuplePointer.pointee.2
+        )
     }
+}
+
+public enum KZAdapterRequestStatus: UInt32 {
+    case success = 0x00000000
+    case unavailable = 0x00000001
+    case error = 0x00000002
+    case unknown = 0x00000003
+    case force32 = 0x7FFFFFFF
 }
 
 public enum KZPowerPreference: UInt32 {
