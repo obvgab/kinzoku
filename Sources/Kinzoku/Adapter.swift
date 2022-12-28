@@ -61,9 +61,6 @@ public struct KZAdapter {
         let tuplePointer = UnsafeMutablePointer<(WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String)>.allocate(capacity: 1)
         defer { tuplePointer.deallocate() }
         
-        let label = label == nil ? "\(c.hashValue)::KZDevice" : label!
-        let queueLabel = queueLabel == nil ? "\(c.hashValue)::KZQueue" : queueLabel!
-        
         var features = features.count > 0 ? features.map { name in WGPUFeatureName(name.rawValue) } : [WGPUFeatureName(.zero)]
         var requiredLimits = WGPURequiredLimits(nextInChain: nil, limits: limits)
         

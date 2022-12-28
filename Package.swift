@@ -24,7 +24,10 @@ let package = Package(
         ),
         .testTarget(
             name: "KinzokuTests",
-            dependencies: ["Kinzoku"]
+            dependencies: ["Kinzoku"],
+            resources: [
+                .copy("Resources/compute.wgsl")
+            ]
         )
     ]
 )

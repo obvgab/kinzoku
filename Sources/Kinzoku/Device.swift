@@ -23,6 +23,15 @@ public struct KZDevice {
         return Array(buffer)
     }
     #endif
+    
+    /*
+    public func createShaderModule(
+        chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: Same as everything else
+        label: String? = nil
+    ) -> KZShaderModule {
+        
+    }
+     */
 }
 
 public enum KZDeviceRequestStatus: UInt32 {

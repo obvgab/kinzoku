@@ -14,7 +14,6 @@ public struct KZInstance {
         chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: ChainedStruct Pointer
         label: String? = nil
     ) -> KZSurface {
-        let label = label == nil ? "\(c.hashValue)::KZSurface" : label!
         var descriptor = WGPUSurfaceDescriptor(nextInChain: chain, label: label)
         return KZSurface(wgpuInstanceCreateSurface(c, &descriptor))
     }
