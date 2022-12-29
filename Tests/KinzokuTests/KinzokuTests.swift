@@ -18,7 +18,7 @@ final class KinzokuTests: XCTestCase {
         
         let _ = adapter.getProperties()
         
-        var source = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "compute", ofType: "wgsl")!))
+        let source = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "compute", ofType: "wgsl")!))
         XCTAssertNotNil(String(cString: source.c.label), "Label of ShaderSource should be the path, not nil")
         print(String(cString: source.c.label))
         print("Huh?")

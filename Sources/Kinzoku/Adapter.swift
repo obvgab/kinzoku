@@ -1,7 +1,22 @@
 import Wgpu
 
-public struct KZAdapter {
+public class KZAdapter {
     public var c: WGPUAdapter
+    var pointers: (
+        label: [UnsafeMutablePointer<CChar>],
+        features: [UnsafeMutablePointer<WGPUFeatureName>],
+        requiredLimits: [UnsafeMutablePointer<WGPURequiredLimits>],
+        queueLabel: [UnsafeMutablePointer<CChar>]
+    )
+    
+    init(_ c: WGPUAdapter) {
+        self.c = c
+        
+        pointers.label = []
+        pointers.features = []
+        pointers.requiredLimits = []
+        pointers.queueLabel = []
+    }
     
     #if !os(macOS)
     public func enumerateFeatures() -> [KZFeature] {
@@ -52,25 +67,34 @@ public struct KZAdapter {
     
     public func requestDevice(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
-        label: String? = nil,
+        label: String = "",
         features: [KZFeature] = [],
         limits: inout KZLimits,
         queueChain: UnsafePointer<WGPUChainedStruct>? = nil,
-        queueLabel: String? = nil
+        queueLabel: String = ""
     ) -> (KZDevice, KZQueue, KZDeviceRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
         let tuplePointer = UnsafeMutablePointer<(WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String)>.allocate(capacity: 1)
         defer { tuplePointer.deallocate() }
         
-        var features = features.count > 0 ? features.map { name in WGPUFeatureName(name.rawValue) } : [WGPUFeatureName(.zero)]
-        var requiredLimits = WGPURequiredLimits(nextInChain: nil, limits: limits)
+        let features = features.map { name in WGPUFeatureName(name.rawValue) }
+        pointers.features.append(manualPointer(features))
+        
+        let requiredLimits = WGPURequiredLimits(nextInChain: nil, limits: limits)
+        pointers.requiredLimits.append(manualPointer(requiredLimits))
+        
+        let labelArray = label.cString(using: String.Encoding.utf8)!
+        pointers.label.append(manualPointer(labelArray))
+        
+        let queueLabelArray = queueLabel.cString(using: String.Encoding.utf8)!
+        pointers.queueLabel.append(manualPointer(queueLabelArray))
         
         var descriptor = WGPUDeviceDescriptor(
             nextInChain: chain,
-            label: label,
+            label: pointers.label.last,
             requiredFeaturesCount: UInt32(features.count),
-            requiredFeatures: &features[0],
-            requiredLimits: &requiredLimits,
-            defaultQueue: WGPUQueueDescriptor(nextInChain: queueChain, label: queueLabel)
+            requiredFeatures: pointers.features.last,
+            requiredLimits: pointers.requiredLimits.last,
+            defaultQueue: WGPUQueueDescriptor(nextInChain: queueChain, label: pointers.queueLabel.last)
         )
         
         wgpuAdapterRequestDevice(c, &descriptor, { status, device, message, rawTuplePointer in
@@ -89,6 +113,13 @@ public struct KZAdapter {
             KZDeviceRequestStatus(rawValue: tuplePointer.pointee.2.rawValue) ?? .unknown,
             tuplePointer.pointee.3
         )
+    }
+    
+    deinit {
+        pointers.label.forEach { pointer in pointer.deallocate() }
+        pointers.features.forEach { pointer in pointer.deallocate() }
+        pointers.requiredLimits.forEach { pointer in pointer.deallocate() }
+        pointers.queueLabel.forEach { pointer in pointer.deallocate() }
     }
 }
 

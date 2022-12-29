@@ -1,20 +1,26 @@
 import Wgpu
 
-public struct KZInstance {
+public class KZInstance {
     public var c: WGPUInstance
+    var pointers: (label: [UnsafeMutablePointer<CChar>], none: Void)
     
     public init(
         _ nextInChain: UnsafePointer<WGPUChainedStruct>? = nil // TODO: ChainedStruct Pointer
     ) {
         var descriptor = WGPUInstanceDescriptor(nextInChain: nextInChain)
         c = wgpuCreateInstance(&descriptor)
+        pointers.label = []
     }
     
     public func createSurface(
         chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: ChainedStruct Pointer
-        label: String? = nil
+        label: String = ""
     ) -> KZSurface {
-        var descriptor = WGPUSurfaceDescriptor(nextInChain: chain, label: label)
+        let labelArray = label.cString(using: String.Encoding.utf8)!
+        pointers.label.append(UnsafeMutablePointer<CChar>.allocate(capacity: labelArray.count))
+        pointers.label.last?.initialize(from: labelArray, count: labelArray.count)
+        
+        var descriptor = WGPUSurfaceDescriptor(nextInChain: chain, label: pointers.label.last)
         return KZSurface(wgpuInstanceCreateSurface(c, &descriptor))
     }
     
@@ -50,10 +56,14 @@ public struct KZInstance {
         }, tuplePointer)
         
         return (
-            KZAdapter(c: tuplePointer.pointee.0),
+            KZAdapter(tuplePointer.pointee.0),
             KZAdapterRequestStatus(rawValue: tuplePointer.pointee.1.rawValue) ?? .unknown,
             tuplePointer.pointee.2
         )
+    }
+    
+    deinit {
+        pointers.label.forEach { pointer in pointer.deallocate() }
     }
 }
 
