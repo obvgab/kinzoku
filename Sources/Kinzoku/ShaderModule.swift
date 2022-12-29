@@ -14,22 +14,17 @@ public class KZShaderSource {
     
     init(fromWGSL: URL) throws {
         let fileContents = try String(contentsOf: fromWGSL).cString(using: String.Encoding.utf8)!
-        
-        pointers.file = UnsafeMutablePointer<CChar>.allocate(capacity: fileContents.count)
-        pointers.file.initialize(from: fileContents, count: fileContents.count)
+        pointers.file = manualPointer(fileContents)
         
         let wgslDescriptor = WGPUShaderModuleWGSLDescriptor(
             chain: WGPUChainedStruct(next: nil, sType: WGPUSType_ShaderModuleWGSLDescriptor),
             code: pointers.file
         )
-        
-        pointers.wgsl = UnsafeMutablePointer<WGPUShaderModuleWGSLDescriptor>.allocate(capacity: 1)
-        pointers.wgsl!.initialize(to: wgslDescriptor)
+        pointers.wgsl = manualPointer(wgslDescriptor)
         let castedPointer = UnsafeRawPointer(pointers.wgsl!).bindMemory(to: WGPUChainedStruct.self, capacity: 1)
         
         let labelArray = fromWGSL.relativeString.cString(using: String.Encoding.utf8)!
-        pointers.label = UnsafeMutablePointer<CChar>.allocate(capacity: labelArray.count)
-        pointers.label.initialize(from: labelArray, count: labelArray.count)
+        pointers.label = manualPointer(labelArray)
         
         c = WGPUShaderModuleDescriptor(
             nextInChain: castedPointer,
