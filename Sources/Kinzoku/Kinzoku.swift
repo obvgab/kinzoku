@@ -14,3 +14,5 @@ func manualPointer<T>(_ data: [T]) -> UnsafeMutablePointer<T> {
     
     return dataPointer
 }
+
+// General note: Create getters and setters for all KZ classes that make interfacing with them akin to C--just provide middleman

@@ -69,7 +69,7 @@ public class KZAdapter {
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = "",
         features: [KZFeature] = [],
-        limits: inout KZLimits,
+        limits: KZLimits,
         queueChain: UnsafePointer<WGPUChainedStruct>? = nil,
         queueLabel: String = ""
     ) -> (KZDevice, KZQueue, KZDeviceRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
@@ -108,7 +108,7 @@ public class KZAdapter {
         }, tuplePointer)
         
         return (
-            KZDevice(c: tuplePointer.pointee.0),
+            KZDevice(tuplePointer.pointee.0),
             KZQueue(c: tuplePointer.pointee.1),
             KZDeviceRequestStatus(rawValue: tuplePointer.pointee.2.rawValue) ?? .unknown,
             tuplePointer.pointee.3

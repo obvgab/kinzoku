@@ -25,7 +25,7 @@ public class KZShaderSource {
         
         let labelArray = fromWGSL.relativeString.cString(using: String.Encoding.utf8)!
         pointers.label = manualPointer(labelArray)
-        
+
         c = WGPUShaderModuleDescriptor(
             nextInChain: castedPointer,
             label: pointers.label,

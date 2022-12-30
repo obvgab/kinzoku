@@ -1074,7 +1074,7 @@ typedef struct WGPURequiredLimits {
     WGPULimits limits;
 } WGPURequiredLimits;
 
-typedef struct WGPUShaderModuleDescriptor {
+typedef struct Descriptor {
     WGPUChainedStruct const * nextInChain;
     char const * label;
     uint32_t hintCount;
@@ -1415,7 +1415,7 @@ WGPU_EXPORT void wgpuDeviceDestroy(WGPUDevice device);
 WGPU_EXPORT size_t wgpuDeviceEnumerateFeatures(WGPUDevice device, WGPUFeatureName * features); // NO MAC
 WGPU_EXPORT bool wgpuDeviceGetLimits(WGPUDevice device, WGPUSupportedLimits * limits);
 WGPU_EXPORT WGPUQueue wgpuDeviceGetQueue(WGPUDevice device);
-WGPU_EXPORT bool wgpuDeviceHasFeature(WGPUDevice device, WGPUFeatureName feature);
+WGPU_EXPORT bool wgpuDeviceHasFeature(WGPUDevice device, WGPUFeatureName feature); // NO MAC
 WGPU_EXPORT bool wgpuDevicePopErrorScope(WGPUDevice device, WGPUErrorCallback callback, void * userdata);
 WGPU_EXPORT void wgpuDevicePushErrorScope(WGPUDevice device, WGPUErrorFilter filter);
 WGPU_EXPORT void wgpuDeviceSetDeviceLostCallback(WGPUDevice device, WGPUDeviceLostCallback callback, void * userdata);

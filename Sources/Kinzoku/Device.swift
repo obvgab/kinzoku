@@ -1,7 +1,17 @@
 import Wgpu
 
-public struct KZDevice {
+public class KZDevice {
     public var c: WGPUDevice
+    var pointers: (
+        source: [UnsafeMutablePointer<WGPUShaderModuleDescriptor>],
+        none: Void
+    )
+    
+    init(_ c: WGPUDevice) {
+        self.c = c
+        
+        pointers.source = []
+    }
     
     /*
     public func createBindGroup(
@@ -24,14 +34,23 @@ public struct KZDevice {
     }
     #endif
     
-    /*
     public func createShaderModule(
-        chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: Same as everything else
-        label: String? = nil
+        source: KZShaderSource
     ) -> KZShaderModule {
+        pointers.source.append(manualPointer(source.c))
+        let module = wgpuDeviceCreateShaderModule(c, pointers.source.last) // This returns nil?
         
+        return KZShaderModule(c: module!) // This then crashes
     }
-     */
+    
+    public func getQueue() -> KZQueue {
+        return KZQueue(c: wgpuDeviceGetQueue(c))
+    }
+    deinit {
+        pointers.source.forEach { pointer in
+            pointer.deallocate()
+        }
+    }
 }
 
 public enum KZDeviceRequestStatus: UInt32 {
