@@ -8,9 +8,9 @@ public class KZInstance {
     )
     
     public init(
-        _ nextInChain: UnsafePointer<WGPUChainedStruct>? = nil
+        _ chain: UnsafePointer<WGPUChainedStruct>? = nil
     ) {
-        var descriptor = WGPUInstanceDescriptor(nextInChain: nextInChain)
+        var descriptor = WGPUInstanceDescriptor(nextInChain: chain)
         c = wgpuCreateInstance(&descriptor)
         pointers.label = []
     }
@@ -33,7 +33,7 @@ public class KZInstance {
     
     public func requestAdapter(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
-        surface: WGPUSurface? = nil, // TODO: Surface struct
+        surface: KZSurface? = nil,
         power: KZPowerPreference = .undefined,
         fallback: Bool = false
     ) -> (KZAdapter, KZAdapterRequestStatus, String) {
@@ -42,7 +42,7 @@ public class KZInstance {
         
         var options = WGPURequestAdapterOptions(
             nextInChain: chain,
-            compatibleSurface: surface,
+            compatibleSurface: surface?.c,
             powerPreference: WGPUPowerPreference(power.rawValue),
             forceFallbackAdapter: fallback
         )

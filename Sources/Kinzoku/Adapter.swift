@@ -46,7 +46,7 @@ public class KZAdapter {
         let driverDescription = (propertiesHolder.driverDescription == nil) ? "Empty Description" : String(cString: propertiesHolder.driverDescription)
         
         return KZProperties(
-            nextInChain: propertiesHolder.nextInChain,
+            chain: propertiesHolder.nextInChain,
             
             vendorID: propertiesHolder.vendorID,
             deviceID: propertiesHolder.deviceID,
@@ -122,7 +122,7 @@ public class KZAdapter {
 public typealias KZLimits = WGPULimits
 
 public struct KZProperties {
-    public var nextInChain: UnsafePointer<WGPUChainedStructOut>? = nil
+    public var chain: UnsafePointer<WGPUChainedStructOut>? = nil
     
     public var vendorID: UInt32
     public var deviceID: UInt32
