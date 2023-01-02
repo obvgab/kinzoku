@@ -18,7 +18,7 @@ public class KZAdapter {
         pointers.queueLabel = []
     }
     
-    #if !os(macOS)
+    #if !os(macOS) // Not supported in the macOS binary from wgpu-native. Consider compiling manually?
     public func enumerateFeatures() -> [KZFeature] {
         var feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
         let count = wgpuAdapterEnumerateFeatures(c, feature)
@@ -77,16 +77,12 @@ public class KZAdapter {
         defer { tuplePointer.deallocate() }
         
         let features = features.map { name in WGPUFeatureName(name.rawValue) }
-        pointers.features.append(manualPointer(features))
-        
         let requiredLimits = WGPURequiredLimits(nextInChain: nil, limits: limits)
+        
+        pointers.features.append(manualPointer(features))
         pointers.requiredLimits.append(manualPointer(requiredLimits))
-        
-        let labelArray = label.cString(using: String.Encoding.utf8)!
-        pointers.label.append(manualPointer(labelArray))
-        
-        let queueLabelArray = queueLabel.cString(using: String.Encoding.utf8)!
-        pointers.queueLabel.append(manualPointer(queueLabelArray))
+        pointers.label.append(strdup(label))
+        pointers.queueLabel.append(strdup(queueLabel))
         
         var descriptor = WGPUDeviceDescriptor(
             nextInChain: chain,
@@ -126,7 +122,7 @@ public class KZAdapter {
 public typealias KZLimits = WGPULimits
 
 public struct KZProperties {
-    public var nextInChain: UnsafePointer<WGPUChainedStructOut>? = nil // TODO: ChainedStruct Pointer
+    public var nextInChain: UnsafePointer<WGPUChainedStructOut>? = nil
     
     public var vendorID: UInt32
     public var deviceID: UInt32

@@ -4,7 +4,7 @@ public class KZDevice {
     public var c: WGPUDevice
     var pointers: (
         source: [UnsafeMutablePointer<WGPUShaderModuleDescriptor>],
-        none: Void
+        none: Void // none is just used so I can keep this as a tuple
     )
     
     init(_ c: WGPUDevice) {
@@ -46,10 +46,9 @@ public class KZDevice {
     public func getQueue() -> KZQueue {
         return KZQueue(c: wgpuDeviceGetQueue(c))
     }
+    
     deinit {
-        pointers.source.forEach { pointer in
-            pointer.deallocate()
-        }
+        pointers.source.forEach { pointer in pointer.deallocate() }
     }
 }
 

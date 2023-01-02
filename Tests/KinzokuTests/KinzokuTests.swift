@@ -28,6 +28,6 @@ final class KinzokuTests: XCTestCase {
         XCTAssertNotNil(String(cString: source.c.label), "Label of ShaderSource should be the path, not nil")
 
         let module = device.createShaderModule(source: source)
-        //XCTAssertNotNil(module.c, "Module was received, but is nil")
+        XCTAssertNotNil(module.c, "Module was received, but is nil")
     }
 }

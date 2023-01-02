@@ -13,18 +13,18 @@ public class KZShaderSource {
     )
     
     init(fromWGSL: URL) throws {
-        let fileContents = try String(contentsOf: fromWGSL).cString(using: String.Encoding.utf8)!
-        pointers.file = manualPointer(fileContents)
+        pointers.file = strdup(try String(contentsOf: fromWGSL))
+        pointers.label = strdup(fromWGSL.relativePath)
         
         let wgslDescriptor = WGPUShaderModuleWGSLDescriptor(
             chain: WGPUChainedStruct(next: nil, sType: WGPUSType_ShaderModuleWGSLDescriptor),
             code: pointers.file
         )
         pointers.wgsl = manualPointer(wgslDescriptor)
-        let castedPointer = UnsafeRawPointer(pointers.wgsl!).bindMemory(to: WGPUChainedStruct.self, capacity: 1)
         
-        let labelArray = fromWGSL.relativeString.cString(using: String.Encoding.utf8)!
-        pointers.label = manualPointer(labelArray)
+        // This seems to be equivalent to (const WGPUChaineStruct *) pointers.wgsl
+        // However, I don't really have a way to verify: lldb doesn't provide much insight comparing C to Swift
+        let castedPointer = UnsafeRawPointer(pointers.wgsl!).bindMemory(to: WGPUChainedStruct.self, capacity: 1)
 
         c = WGPUShaderModuleDescriptor(
             nextInChain: castedPointer,
@@ -40,9 +40,8 @@ public class KZShaderSource {
     init(fromSPIRV: URL) {
         
     }
-     */
+    */
     
-    // Hopefully get rid of the pointers and data (no memory leaks?)
     deinit {
         pointers.file.deallocate()
         pointers.label.deallocate()

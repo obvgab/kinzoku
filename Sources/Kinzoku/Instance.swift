@@ -2,10 +2,13 @@ import Wgpu
 
 public class KZInstance {
     public var c: WGPUInstance
-    var pointers: (label: [UnsafeMutablePointer<CChar>], none: Void)
+    var pointers: (
+        label: [UnsafeMutablePointer<CChar>],
+        none: Void
+    )
     
     public init(
-        _ nextInChain: UnsafePointer<WGPUChainedStruct>? = nil // TODO: ChainedStruct Pointer
+        _ nextInChain: UnsafePointer<WGPUChainedStruct>? = nil
     ) {
         var descriptor = WGPUInstanceDescriptor(nextInChain: nextInChain)
         c = wgpuCreateInstance(&descriptor)
@@ -13,14 +16,12 @@ public class KZInstance {
     }
     
     public func createSurface(
-        chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: ChainedStruct Pointer
+        chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = ""
     ) -> KZSurface {
-        let labelArray = label.cString(using: String.Encoding.utf8)!
-        pointers.label.append(UnsafeMutablePointer<CChar>.allocate(capacity: labelArray.count))
-        pointers.label.last?.initialize(from: labelArray, count: labelArray.count)
-        
+        pointers.label.append(strdup(label))
         var descriptor = WGPUSurfaceDescriptor(nextInChain: chain, label: pointers.label.last)
+        
         return KZSurface(wgpuInstanceCreateSurface(c, &descriptor))
     }
     
@@ -31,11 +32,11 @@ public class KZInstance {
     #endif
     
     public func requestAdapter(
-        chain: UnsafePointer<WGPUChainedStruct>? = nil, // TODO: ChainedStruct pointer
+        chain: UnsafePointer<WGPUChainedStruct>? = nil,
         surface: WGPUSurface? = nil, // TODO: Surface struct
         power: KZPowerPreference = .undefined,
         fallback: Bool = false
-    ) -> (KZAdapter, KZAdapterRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
+    ) -> (KZAdapter, KZAdapterRequestStatus, String) {
         let tuplePointer = UnsafeMutablePointer<(WGPUAdapter, WGPURequestAdapterStatus, String)>.allocate(capacity: 1)
         defer { tuplePointer.deallocate() }
         

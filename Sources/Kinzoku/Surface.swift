@@ -1,10 +1,10 @@
 import Wgpu
 
 public class KZSurface {
-    public var c: WGPUSurface?
+    public var c: WGPUSurface
     
     public init(
-        _ surface: WGPUSurface?
+        _ surface: WGPUSurface
     ) {
         self.c = surface
     }
