@@ -33,4 +33,6 @@ func manualPointer<T>(_ data: [T]) -> UnsafeMutablePointer<T> {
        - Less memory efficient, cleaner code
        - Depending on how things are sized, it might actually be more memory efficient, as double-up'd objects wouldn't be an issue
  - Compress class files into more abstract files
+ - Set enums to have primitive WGPUTypes, that way no conversion is necessary (removes all the calls to constructors and .rawValues)
+ - Make functions with callbacks (presumably async) into actual swift async functions
 */

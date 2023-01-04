@@ -7,8 +7,9 @@ final class KinzokuTests: XCTestCase {
     // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c
     @available(macOS 13.0, *)
     func testCompute() throws {
-        var numbers: [UInt32] = [1, 2, 3, 4]
-        let numbersSize = MemoryLayout.size(ofValue: numbers)
+        let numbersBase: [UInt32] = [2, 7, 3, 4]
+        let numbers = manualPointer(numbersBase)
+        let numbersSize = MemoryLayout.size(ofValue: numbersBase)
         
         let instance = KZInstance()
         
@@ -48,13 +49,21 @@ final class KinzokuTests: XCTestCase {
         
         computePass.setPipeline(pipeline: computePipeline)
         computePass.setBindGroup(bindGroup: bindGroup)
-        computePass.dispatchWorkground(x: UInt32(numbers.count))
+        computePass.dispatchWorkground(x: UInt32(numbersBase.count))
         computePass.end()
         
         commandEncoder.copyBufferToBuffer(source: storageBuffer, destination: stagingBuffer, size: UInt64(numbersSize))
         
         let commandBuffer = commandEncoder.finish()
-        queue.writeBuffer(buffer: storageBuffer, data: &numbers, size: numbersSize)
+        queue.writeBuffer(buffer: storageBuffer, data: numbers, size: numbersSize)
         queue.submit(count: 1, buffer: commandBuffer)
+        
+        stagingBuffer.map(mode: .read, size: numbersSize)
+        device.poll(wait: true)
+        
+        let times: UnsafeMutablePointer<UInt32> = stagingBuffer.getMappedRange(offset: 0, size: numbersSize)!
+        print("Times: \(times.pointee), \(times.advanced(by: 1).pointee), \(times.advanced(by: 2).pointee), \(times.advanced(by: 3).pointee)")
+        
+        stagingBuffer.unmap()
     }
 }

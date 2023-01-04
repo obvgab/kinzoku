@@ -122,6 +122,10 @@ public class KZDevice {
         return KZQueue(wgpuDeviceGetQueue(c))
     }
     
+    public func poll(wait: Bool = false) { // Eventually fully implement submissionIndex
+        wgpuDevicePoll(c, wait, nil)
+    }
+    
     //deinit {}
 }
 
