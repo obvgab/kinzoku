@@ -7,7 +7,7 @@ final class KinzokuTests: XCTestCase {
     // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c
     @available(macOS 13.0, *)
     func testCompute() throws {
-        let numbers: [UInt32] = [1, 2, 3, 4]
+        var numbers: [UInt32] = [1, 2, 3, 4]
         let numbersSize = MemoryLayout.size(ofValue: numbers)
         
         let instance = KZInstance()
@@ -33,5 +33,28 @@ final class KinzokuTests: XCTestCase {
         XCTAssertNotNil(stagingBuffer.c, "StagingBuffer was received, but is nil")
         let storageBuffer = device.createBuffer(label: "StorageBuffer", usage: [.storage, .copyDestination, .copySource], size: UInt64(numbersSize))
         XCTAssertNotNil(storageBuffer.c, "StorageBuffer was received, but is nil")
+        
+        let computePipeline = device.createComputePipeline(label: "Compute Pipeline", module: module, entry: "main")
+        XCTAssertNotNil(computePipeline.c, "ComputePipeline was received, but is nil")
+        let bindGroupLayout = computePipeline.getBindGroupLayout(index: 0)
+        XCTAssertNotNil(bindGroupLayout.c, "BindGroupLayout of index 0 was received, but is nil")
+        
+        let bindGroup = device.createBindGroup(label: "Bind Group", layout: bindGroupLayout, entries: [KZBindGroupEntry(size: UInt64(numbersSize), buffer: storageBuffer)])
+        XCTAssertNotNil(bindGroup.c, "BindGroup was received, but is nil")
+        let commandEncoder = device.createCommandEncoder(label: "Command Encoder")
+        XCTAssertNotNil(commandEncoder.c, "CommandEncoder was received, but is nil")
+        let computePass = commandEncoder.beginComputePass(label: "Compute Pass")
+        XCTAssertNotNil(computePass.c, "ComputePass was received, but is nil")
+        
+        computePass.setPipeline(pipeline: computePipeline)
+        computePass.setBindGroup(bindGroup: bindGroup)
+        computePass.dispatchWorkground(x: UInt32(numbers.count))
+        computePass.end()
+        
+        commandEncoder.copyBufferToBuffer(source: storageBuffer, destination: stagingBuffer, size: UInt64(numbersSize))
+        
+        let commandBuffer = commandEncoder.finish()
+        queue.writeBuffer(buffer: storageBuffer, data: &numbers, size: numbersSize)
+        queue.submit(count: 1, buffer: commandBuffer)
     }
 }

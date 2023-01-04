@@ -105,7 +105,7 @@ public class KZAdapter {
         
         return (
             KZDevice(tuplePointer.pointee.0),
-            KZQueue(c: tuplePointer.pointee.1),
+            KZQueue(tuplePointer.pointee.1),
             KZDeviceRequestStatus(rawValue: tuplePointer.pointee.2.rawValue) ?? .unknown,
             tuplePointer.pointee.3
         )
