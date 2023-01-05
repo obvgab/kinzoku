@@ -9,7 +9,7 @@ final class KinzokuTests: XCTestCase {
     func testCompute() throws {
         let numbersBase: [UInt32] = [2, 7, 3, 4]
         let numbers = manualPointer(numbersBase)
-        let numbersSize = MemoryLayout.size(ofValue: numbersBase)
+        let numbersSize = MemoryLayout<UInt32>.size * numbersBase.count
         
         let instance = KZInstance()
         
