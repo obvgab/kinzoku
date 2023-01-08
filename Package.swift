@@ -3,10 +3,11 @@ import PackageDescription
 
 let package = Package(
     name: "Kinzoku",
+    platforms: [ .macOS(.v13) ], // I don't think we need to specify Linux
     products: [
         .library(
             name: "Kinzoku",
-            targets: ["Kinzoku"]),
+            targets: [ "Kinzoku" ]),
     ],
     dependencies: [],
     targets: [
@@ -15,7 +16,7 @@ let package = Package(
         ),
         .target(
             name: "Kinzoku",
-            dependencies: ["Wgpu"],
+            dependencies: [ "Wgpu" ],
             linkerSettings: [
                 .unsafeFlags([
                     "-L\(Context.packageDirectory)/Sources/Wgpu/macos/arm64"
@@ -24,7 +25,7 @@ let package = Package(
         ),
         .testTarget(
             name: "KinzokuTests",
-            dependencies: ["Kinzoku"],
+            dependencies: [ "Kinzoku" ],
             resources: [
                 .process("Resources")
             ]

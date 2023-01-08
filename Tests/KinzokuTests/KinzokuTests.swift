@@ -1,11 +1,9 @@
 import XCTest
-import Wgpu
 @testable import Kinzoku
 
 final class KinzokuTests: XCTestCase {
     #if os(macOS)
     // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c - MacOS
-    @available(macOS 13.0, *)
     func testCompute() throws {
         let numbersBase: [UInt32] = [1, 2, 3, 4]
         let numbers = manualPointer(numbersBase)
@@ -70,7 +68,6 @@ final class KinzokuTests: XCTestCase {
     }
     
     // https://github.com/gfx-rs/wgpu-native/blob/master/examples/triangle/main.c - MacOS
-    @available(macOS 13.0, *)
     func testTriangle() throws {
         let instance = KZInstance()
         
@@ -89,7 +86,7 @@ final class KinzokuTests: XCTestCase {
         
         // Callbacks should be here, but we might want to rethink those
         
-        let source = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
+        let _ = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
     }
     #endif
     // Linux tests?
