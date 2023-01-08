@@ -2,7 +2,6 @@
 #define WGPU_H_
 
 #include "webgpu.h"
-#include "kzutils.h"
 
 // must be used to free the strings & slices returned by the library,
 // for other wgpu objects use appropriate drop functions.

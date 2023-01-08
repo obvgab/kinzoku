@@ -26,7 +26,8 @@ let package = Package(
             name: "KinzokuTests",
             dependencies: ["Kinzoku"],
             resources: [
-                .copy("Resources/compute.wgsl")
+                .copy("Resources/compute.wgsl"),
+                .copy("Resources/triangle.wgsl")
             ]
         )
     ]

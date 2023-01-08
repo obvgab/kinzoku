@@ -3,13 +3,13 @@ import Wgpu
 @testable import Kinzoku
 
 final class KinzokuTests: XCTestCase {
-    // This is slowly going to reflect wgpu-native's actual compute test
-    // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c
+    #if os(macOS)
+    // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c - MacOS
     @available(macOS 13.0, *)
     func testCompute() throws {
-        let numbersBase: [UInt32] = [2, 7, 3, 4]
+        let numbersBase: [UInt32] = [1, 2, 3, 4]
         let numbers = manualPointer(numbersBase)
-        let numbersSize = MemoryLayout<UInt32>.size * numbersBase.count
+        let numbersSize = MemoryLayout<UInt32>.stride * numbersBase.count
         
         let instance = KZInstance()
         
@@ -17,9 +17,10 @@ final class KinzokuTests: XCTestCase {
         XCTAssertEqual(adapterStatus, .success, "Adapter was not properly received")
         XCTAssertNotNil(adapter.c, "Adapter was received, but is nil")
         
-        let limits = getReq() // We should switch this to Swift native later
+        var limits = KZLimits()
+        limits.maxBindGroups = 1
         
-        let (device, queue, deviceStatus, _) = adapter.requestDevice(label: "Device", limits: limits.limits)
+        let (device, queue, deviceStatus, _) = adapter.requestDevice(label: "Device", limits: limits)
         XCTAssertEqual(deviceStatus, .success, "Device was not properly received")
         XCTAssertNotNil(device.c, "Device was received, but is nil")
         XCTAssertNotNil(queue.c, "Queue was received, but is nil")
@@ -63,7 +64,33 @@ final class KinzokuTests: XCTestCase {
         
         let times: UnsafeMutablePointer<UInt32> = stagingBuffer.getMappedRange(offset: 0, size: numbersSize)!
         print("Times: \(times.pointee), \(times.advanced(by: 1).pointee), \(times.advanced(by: 2).pointee), \(times.advanced(by: 3).pointee)")
+        XCTAssertEqual([times.pointee, times.advanced(by: 1).pointee, times.advanced(by: 2).pointee, times.advanced(by: 3).pointee], [0, 1, 7 ,2], "Compute incorrectly calculated")
         
         stagingBuffer.unmap()
     }
+    
+    // https://github.com/gfx-rs/wgpu-native/blob/master/examples/triangle/main.c - MacOS
+    @available(macOS 13.0, *)
+    func testTriangle() throws {
+        let instance = KZInstance()
+        
+        // surface
+        
+        let (adapter, adapterStatus, _) = instance.requestAdapter()
+        XCTAssertEqual(adapterStatus, .success, "Adapter was not properly received")
+        XCTAssertNotNil(adapter.c, "Adapter was received, but is nil")
+        
+        let limits = KZLimits() // Does this become default/undefined equivalent?
+        
+        let (device, queue, deviceStatus, _) = adapter.requestDevice(label: "Device", limits: limits)
+        XCTAssertEqual(deviceStatus, .success, "Device was not properly received")
+        XCTAssertNotNil(device.c, "Device was received, but is nil")
+        XCTAssertNotNil(queue.c, "Queue was received, but is nil")
+        
+        // Callbacks should be here, but we might want to rethink those
+        
+        let source = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
+    }
+    #endif
+    // Linux tests?
 }
