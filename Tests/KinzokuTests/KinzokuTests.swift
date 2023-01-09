@@ -2,7 +2,6 @@ import XCTest
 @testable import Kinzoku
 
 final class KinzokuTests: XCTestCase {
-    #if os(macOS)
     // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c - MacOS
     func testCompute() throws {
         let numbersBase: [UInt32] = [1, 2, 3, 4]
@@ -88,6 +87,4 @@ final class KinzokuTests: XCTestCase {
         
         let _ = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
     }
-    #endif
-    // Linux tests?
 }
