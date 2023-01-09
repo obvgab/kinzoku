@@ -22,7 +22,7 @@ final class KinzokuTests: XCTestCase {
         XCTAssertNotNil(device.c, "Device was received, but is nil")
         XCTAssertNotNil(queue.c, "Queue was received, but is nil")
         
-        let source = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "compute", ofType: "wgsl")!))
+        let source = try! KZShaderSource(fromWGSL: URL(fileURLWithPath: Bundle.module.path(forResource: "compute", ofType: "wgsl")!))
         XCTAssertNotNil(String(cString: source.c.label), "Label of ShaderSource should be the path, not nil")
 
         let module = device.createShaderModule(source: source)
@@ -85,6 +85,6 @@ final class KinzokuTests: XCTestCase {
         
         // Callbacks should be here, but we might want to rethink those
         
-        let _ = try! KZShaderSource(fromWGSL: URL(filePath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
+        let _ = try! KZShaderSource(fromWGSL: URL(fileURLWithPath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
     }
 }
