@@ -50,10 +50,8 @@ public class KZInstance {
         wgpuInstanceRequestAdapter(c, &options, { status, adapter, message, rawTuplePointer in
             let rebound = rawTuplePointer!.bindMemory(to: (WGPUAdapter, WGPURequestAdapterStatus, String).self, capacity: 1)
             
-            if let adapter = adapter { rebound.pointee.0 = adapter }
-            if let message = message { rebound.pointee.2 = String(cString: message) } else { rebound.pointee.2 = "" }
-            
-            rebound.pointee.1 = status
+            let message = (message != nil) ? String(cString: message!) : ""
+            rebound.initialize(to: (adapter!, status, message))
         }, tuplePointer)
         
         return (

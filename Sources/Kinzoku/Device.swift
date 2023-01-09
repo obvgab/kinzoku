@@ -16,7 +16,6 @@ public class KZDevice {
     }
     */
     
-    #if !os(macOS)
     public func enumerateFeatures() -> [KZFeature] {
         let feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
         let count = wgpuDeviceEnumerateFeatures(c, feature)
@@ -27,7 +26,6 @@ public class KZDevice {
         
         return Array(buffer)
     }
-    #endif
     
     public func createShaderModule(
         source: KZShaderSource

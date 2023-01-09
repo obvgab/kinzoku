@@ -22,7 +22,6 @@ public class KZAdapter {
         pointers.queueLabel = []
     }
     
-    #if !os(macOS)
     public func enumerateFeatures() -> [KZFeature] {
         let feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
         let count = wgpuAdapterEnumerateFeatures(c, feature)
@@ -33,7 +32,6 @@ public class KZAdapter {
         
         return Array(buffer)
     }
-    #endif
     
     public func getLimits() -> KZLimits {
         var limitHolder = WGPUSupportedLimits()
@@ -63,11 +61,9 @@ public class KZAdapter {
         )
     }
     
-    #if !os(macOS)
     public func hasFeature(feature: KZFeature) -> Bool {
         return wgpuAdapterHasFeature(c, WGPUFeatureName(feature.rawValue))
     }
-    #endif
     
     public func requestDevice(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
@@ -100,10 +96,8 @@ public class KZAdapter {
         wgpuAdapterRequestDevice(c, &descriptor, { status, device, message, rawTuplePointer in
             let rebound = rawTuplePointer!.bindMemory(to: (WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String).self, capacity: 1)
             
-            if let device = device { rebound.pointee.0 = device; rebound.pointee.1 = wgpuDeviceGetQueue(device) }
-            if let message = message { rebound.pointee.3 = String(cString: message) } else { rebound.pointee.3 = "" }
-            
-            rebound.pointee.2 = status
+            let message = (message != nil) ? String(cString: message!) : ""
+            rebound.initialize(to: (device!, wgpuDeviceGetQueue(device!), status, message))
         }, tuplePointer)
         
         return (
