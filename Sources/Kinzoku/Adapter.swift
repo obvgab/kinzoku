@@ -18,7 +18,7 @@ public class KZAdapter {
         pointers.queueLabel = []
     }
     
-    #if !os(macOS) // Not supported in the macOS binary from wgpu-native. Consider compiling manually?
+    #if !os(macOS)
     public func enumerateFeatures() -> [KZFeature] {
         var feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
         let count = wgpuAdapterEnumerateFeatures(c, feature)

@@ -17,6 +17,14 @@ func manualPointer<T>(_ data: [T]) -> UnsafeMutablePointer<T> {
     return dataPointer
 }
 
+#if os(Linux)
+func strdup(_ data: String) -> UnsafeMutablePointer<CChar> {
+    let deconstructed = data.cString(using: .utf8)
+    
+    return manualPointer(deconstructed ?? [])
+}
+#endif
+
 // MARK: - Library Loading
 // Sourced from SourceKitten's dlopen and dlsym method
  
