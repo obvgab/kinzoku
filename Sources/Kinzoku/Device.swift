@@ -18,7 +18,7 @@ public class KZDevice {
     
     #if !os(macOS)
     public func enumerateFeatures() -> [KZFeature] {
-        var feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
+        let feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
         let count = wgpuDeviceEnumerateFeatures(c, feature)
         
         guard let buffer = feature?.withMemoryRebound(to: KZFeature.self, capacity: count, { pointer in

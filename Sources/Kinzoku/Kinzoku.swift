@@ -126,7 +126,7 @@ internal let wgpuDeviceCreateShaderModule: @convention(c) (WGPUDevice, UnsafePoi
 // swap chain
 // texture
 // destroy
-// enumerate features
+internal let wgpuDeviceEnumerateFeatures: @convention(c) (WGPUDevice, UnsafeMutablePointer<WGPUFeatureName>?) -> Int = loader.load("wgpuDeviceEnumerateFeatures")
 // limits
 internal let wgpuDeviceGetQueue: @convention(c) (WGPUDevice) -> WGPUQueue = loader.load("wgpuDeviceGetQueue")
 // has feature
@@ -139,7 +139,7 @@ internal let wgpuDevicePoll: @convention(c) (WGPUDevice, Bool, UnsafePointer<WGP
 
 // Methods of Instance
 internal let wgpuInstanceCreateSurface: @convention(c) (WGPUInstance, UnsafePointer<WGPUSurfaceDescriptor>?) -> WGPUSurface = loader.load("wgpuInstanceCreateSurface")
-// process events
+internal let wgpuInstanceProcessEvents: @convention(c) (WGPUInstance) -> Void = loader.load("wgpuInstanceProcessEvents")
 internal let wgpuInstanceRequestAdapter: @convention(c) (WGPUInstance, UnsafePointer<WGPURequestAdapterOptions>?, WGPURequestAdapterCallback, UnsafeMutableRawPointer?) -> Void = loader.load("wgpuInstanceRequestAdapter")
 
 // Methods of Queue
