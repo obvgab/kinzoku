@@ -24,7 +24,19 @@ private class Loader {
     fileprivate let handle: UnsafeMutableRawPointer
     
     init() {
-        let path = Bundle.module.path(forResource: "libwgpu", ofType: ".dylib")
+        #if os(macOS)
+            #if arch(arm64) // Darwin Aarch64
+                let path = Bundle.module.path(forResource: "aarch64", ofType: ".dylib")
+            #else // Darwin x86_64
+                let path = Bundle.module.path(forResource: "x86_64", ofType: ".dylib")
+            #endif
+        #else
+            #if arch(arm64) // Linux Aarch64
+                let path = Bundle.module.path(forResource: "aarch64", ofType: ".so")
+            #else // Linux x86_64
+                let path = Bundle.module.path(forResource: "x86_64", ofType: ".so")
+            #endif
+        #endif
         
         if let handle = dlopen(path, RTLD_LAZY) {
             self.handle = handle

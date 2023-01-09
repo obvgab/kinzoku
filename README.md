@@ -3,8 +3,12 @@
 Implementation of wgpu-native in Swift.
 
 Library binaries are provided for
- - macOS arm64
- - (more soon I swear)
+ - macOS
+   - arm64
+   - x86_64 (testing)
+ - manylinux
+   - arm64 (testing)
+   - x86_64 (testing)
 
 General Notes
  - Create getters and setters for all KZ classes that make interfacing with them akin to C--just provide middleman
