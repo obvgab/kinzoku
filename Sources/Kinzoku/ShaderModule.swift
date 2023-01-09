@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 import Foundation
 
 public struct KZShaderModule { public var c: WGPUShaderModule }

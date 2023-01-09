@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public class KZAdapter {
     public var c: WGPUAdapter
@@ -33,7 +33,7 @@ public class KZAdapter {
     
     public func getLimits() -> KZLimits {
         var limitHolder = WGPUSupportedLimits()
-        wgpuAdapterGetLimits(c, &limitHolder)
+        _ = wgpuAdapterGetLimits(c, &limitHolder)
         
         return limitHolder.limits as KZLimits // Throws away Required/Supported
     }
@@ -96,11 +96,10 @@ public class KZAdapter {
         wgpuAdapterRequestDevice(c, &descriptor, { status, device, message, rawTuplePointer in
             let rebound = rawTuplePointer!.bindMemory(to: (WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String).self, capacity: 1)
             
-            if let device = device { rebound.pointee.0 = device }
+            if let device = device { rebound.pointee.0 = device; rebound.pointee.1 = wgpuDeviceGetQueue(device) }
             if let message = message { rebound.pointee.3 = String(cString: message) } else { rebound.pointee.3 = "" }
             
             rebound.pointee.2 = status
-            rebound.pointee.1 = wgpuDeviceGetQueue(device)
         }, tuplePointer)
         
         return (

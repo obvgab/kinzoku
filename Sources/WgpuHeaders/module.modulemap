@@ -1,0 +1,3 @@
+module Wgpu {
+    header "include/wgpu.h"
+}

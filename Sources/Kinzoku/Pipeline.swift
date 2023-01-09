@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public struct KZComputePipeline {
     public var c: WGPUComputePipeline

@@ -1,5 +1,0 @@
-module Wgpu [system] {
-    header "wgpu.h"
-    link "wgpu"
-    export *
-}

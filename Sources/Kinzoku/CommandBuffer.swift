@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public class KZCommandBuffer {
     public var c: WGPUCommandBuffer

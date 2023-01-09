@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public class KZBuffer {
     public var c: WGPUBuffer

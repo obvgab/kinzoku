@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public class KZComputePassEncoder {
     public var c: WGPUComputePassEncoder

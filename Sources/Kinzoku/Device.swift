@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public class KZDevice {
     public var c: WGPUDevice
@@ -123,7 +123,7 @@ public class KZDevice {
     }
     
     public func poll(wait: Bool = false) { // Eventually fully implement submissionIndex
-        wgpuDevicePoll(c, wait, nil)
+        _ = wgpuDevicePoll(c, wait, nil)
     }
     
     //deinit {}

@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public struct KZBindGroup { public var c: WGPUBindGroup }
 public struct KZBindGroupLayout { public var c: WGPUBindGroupLayout }

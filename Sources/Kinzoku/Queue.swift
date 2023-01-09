@@ -1,4 +1,4 @@
-import Wgpu
+import WgpuHeaders
 
 public class KZQueue {
     public var c: WGPUQueue
@@ -20,7 +20,6 @@ public class KZQueue {
         count: UInt32 = 0,
         buffer: KZCommandBuffer
     ) {
-        var optionalBuffer = Optional(buffer.c)
-        wgpuQueueSubmit(c, count, &optionalBuffer)
+        wgpuQueueSubmit(c, count, &buffer.c)
     }
 }

@@ -7,20 +7,19 @@ let package = Package(
     products: [
         .library(
             name: "Kinzoku",
-            targets: [ "Kinzoku" ]),
+            targets: [ "Kinzoku" ]
+        )
     ],
     dependencies: [],
     targets: [
-        .systemLibrary(
-            name: "Wgpu"
+        .target(
+            name: "WgpuHeaders"
         ),
         .target(
             name: "Kinzoku",
-            dependencies: [ "Wgpu" ],
-            linkerSettings: [
-                .unsafeFlags([
-                    "-L\(Context.packageDirectory)/Sources/Wgpu/macos/arm64"
-                ])
+            dependencies: [ "WgpuHeaders" ],
+            resources: [
+                .process("Libraries") // Eventually we should do individual if statements for platforms, so we don't import them all
             ]
         ),
         .testTarget(
