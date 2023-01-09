@@ -38,8 +38,7 @@ func manualPointer<T>(_ data: [T]) -> UnsafeMutablePointer<T> {
  - Make functions with callbacks (presumably async) into actual swift async functions
  - Eventually exclude the header files, because we basically define it ourselves in this file
    - Would also remove all dependencies from the project, which is nice. WgpuHeaders would be irrelevent
-   - If we can do structs by equivalent values, we can avoid typealias maybe?
-     - Also makes the codebase simple
+   - Callbacks can become regular closures probably
 */
 
 
