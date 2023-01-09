@@ -1,6 +1,3 @@
-import WgpuHeaders
-import Foundation
-
 public struct KZShaderModule { public var c: WGPUShaderModule }
 
 public class KZShaderSource {

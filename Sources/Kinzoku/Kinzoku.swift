@@ -1,5 +1,8 @@
-import Foundation
-import WgpuHeaders
+@_exported import WgpuHeaders
+#if os(Linux)
+@_exported import Glibc
+#endif
+@_exported import Foundation
 
 // MARK: - Utility Functions
 
@@ -59,7 +62,8 @@ private class Loader {
 
 private let loader = Loader()
 
-internal let wgpuCreateInstance: @convention(c) (UnsafePointer<WGPUInstanceDescriptor>?) -> (WGPUInstance) = loader.load("wgpuCreateInstance")
+internal let wgpuCreateInstance: @convention(c) (UnsafePointer<WGPUInstanceDescriptor>?) -> WGPUInstance = loader.load("wgpuCreateInstance")
+internal let wgpuGetProcAddress: @convention(c) (WGPUDevice, UnsafePointer<CChar>?) -> WGPUProc = loader.load("wgpuGetProcAddress")
 
 // Methods of Adapter
 internal let wgpuAdapterEnumerateFeatures: @convention(c) (WGPUAdapter, UnsafeMutablePointer<WGPUFeatureName>?) -> Int = loader.load("wgpuAdapterEnumerateFeatures")
@@ -68,29 +72,38 @@ internal let wgpuAdapterGetProperties: @convention(c) (WGPUAdapter, UnsafeMutabl
 internal let wgpuAdapterHasFeature: @convention(c) (WGPUAdapter, WGPUFeatureName) -> Bool = loader.load("wgpuAdapterHasFeature")
 internal let wgpuAdapterRequestDevice: @convention(c) (WGPUAdapter, UnsafePointer<WGPUDeviceDescriptor>?, WGPURequestDeviceCallback, UnsafeMutableRawPointer?) -> Void = loader.load("wgpuAdapterRequestDevice")
 
+// Methods of BindGroup
+internal let wgpuBindGroupSetLabel: @convention(c) (WGPUBindGroup, UnsafePointer<CChar>?) -> Void = loader.load("wgpuBindGroupSetLabel")
+
+// Methods of BindGroupLayout
+internal let wgpuBindGroupLayoutSetLabel: @convention(c) (WGPUBindGroupLayout, UnsafePointer<CChar>?) -> Void = loader.load("wgpuBindGroupLayoutSetLabel")
+
 // Methods of Buffer
-// destroy
-// const mapped
+internal let wgpuBufferDestroy: @convention(c) (WGPUBuffer) -> Void = loader.load("wgpuBufferDestroy")
+internal let wgpuBufferGetConstMappedRange: @convention(c) (WGPUBuffer, Int, Int) -> UnsafeRawPointer? = loader.load("wgpuBufferGetConstMappedRange")
 internal let wgpuBufferGetMappedRange: @convention(c) (WGPUBuffer, Int, Int) -> UnsafeMutableRawPointer? = loader.load("wgpuBufferGetMappedRange")
 internal let wgpuBufferMapAsync: @convention(c) (WGPUBuffer, WGPUMapModeFlags, Int, Int, WGPUBufferMapCallback, UnsafeMutableRawPointer?) -> Void = loader.load("wgpuBufferMapAsync")
-// set label
+internal let wgpuBufferSetLabel: @convention(c) (WGPUBuffer, UnsafePointer<CChar>?) -> Void = loader.load("wgpuBufferSetLabel")
 internal let wgpuBufferUnmap: @convention(c) (WGPUBuffer) -> Void = loader.load("wgpuBufferUnmap")
+
+// Methods of CommandBuffer
+internal let wgpuCommandBufferSetLabel: @convention(c) (WGPUCommandBuffer, UnsafePointer<CChar>?) -> Void = loader.load("wgpuCommandBufferSetLabel")
 
 // Methods of CommandEncoder
 internal let wgpuCommandEncoderBeginComputePass: @convention(c) (WGPUCommandEncoder, UnsafePointer<WGPUComputePassDescriptor>?) -> WGPUComputePassEncoder = loader.load("wgpuCommandEncoderBeginComputePass")
-// render pass
-// clear buffer
+internal let wgpuCommandEncoderBeginRenderPass: @convention(c) (WGPUCommandEncoder, UnsafePointer<WGPURenderPassDescriptor>?) -> WGPURenderPassEncoder = loader.load("wgpuCommandEncoderBeginRenderPass")
+internal let wgpuCommandEncoderClearBuffer: @convention(c) (WGPUCommandEncoder, WGPUBuffer, UInt64, UInt64) -> Void = loader.load("wgpuCommandEncoderClearBuffer")
 internal let wgpuCommandEncoderCopyBufferToBuffer: @convention(c) (WGPUCommandEncoder, WGPUBuffer, UInt64, WGPUBuffer, UInt64, UInt64) -> Void = loader.load("wgpuCommandEncoderCopyBufferToBuffer")
-// buffer to texture
-// texture to buffer
-// texture to texture
+internal let wgpuCommandEncoderCopyBufferToTexture: @convention(c) (WGPUCommandEncoder, UnsafePointer<WGPUImageCopyBuffer>?, UnsafePointer<WGPUImageCopyTexture>?, UnsafePointer<WGPUExtent3D>?) -> Void = loader.load("wgpuCommandEncoderCopyBufferToTexture")
+internal let wgpuCommandEncoderCopyTextureToBuffer: @convention(c) (WGPUCommandEncoder, UnsafePointer<WGPUImageCopyTexture>?, UnsafePointer<WGPUImageCopyBuffer>?, UnsafePointer<WGPUExtent3D>?) -> Void = loader.load("wgpuCommandEncoderCopyTextureToBuffer")
+internal let wgpuCommandEncoderCopyTextureToTexture: @convention(c) (WGPUCommandEncoder, UnsafePointer<WGPUImageCopyTexture>?, UnsafePointer<WGPUImageCopyTexture>?, UnsafePointer<WGPUExtent3D>?) -> Void = loader.load("wgpuCommandEncoderCopyTextureToTexture")
 internal let wgpuCommandEncoderFinish: @convention(c) (WGPUCommandEncoder, UnsafePointer<WGPUCommandBufferDescriptor>?) -> WGPUCommandBuffer = loader.load("wgpuCommandEncoderFinish")
-// debug marker
-// debug pop
-// debug push
-// query resolve
-// set label
-// write timestamp
+internal let wgpuCommandEncoderInsertDebugMarker: @convention(c) (WGPUCommandEncoder, UnsafePointer<CChar>?) -> Void = loader.load("wgpuCommandEncoderInsertDebugMarker")
+internal let wgpuCommandEncoderPopDebugGroup: @convention(c) (WGPUCommandEncoder) -> Void = loader.load("wgpuCommandEncoderPopDebugGroup")
+internal let wgpuCommandEncoderPushDebugGroup: @convention(c) (WGPUCommandEncoder, UnsafePointer<CChar>?) -> Void = loader.load("wgpuCommandEncoderPushDebugGroup")
+internal let wgpuCommandEncoderResolveQuerySet: @convention(c) (WGPUCommandEncoder, WGPUQuerySet, UInt32, UInt32, WGPUBuffer, UInt64) -> Void = loader.load("wgpuCommandEncoderResolveQuerySet")
+internal let wgpuCommandEncoderSetLabel: @convention(c) (WGPUCommandEncoder, UnsafePointer<CChar>?) -> Void = loader.load("wgpuCommandEncoderSetLabel")
+internal let wgpuCommandEncoderWriteTimestamp: @convention(c) (WGPUCommandEncoder, WGPUQuerySet, UInt32) -> Void = loader.load("wgpuCommandEncoderWriteTimestamp")
 
 // Methods of ComputePassEncoder
 // begin pipeline

@@ -1,5 +1,3 @@
-import WgpuHeaders
-
 public class KZInstance {
     public var c: WGPUInstance
     var pointers: (

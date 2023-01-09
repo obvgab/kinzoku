@@ -1,5 +1,3 @@
-import WgpuHeaders
-
 public class KZDevice {
     public var c: WGPUDevice
     //var pointers: ()

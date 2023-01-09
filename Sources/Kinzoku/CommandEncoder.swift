@@ -1,5 +1,3 @@
-import WgpuHeaders
-
 public class KZCommandEncoder {
     public var c: WGPUCommandEncoder
     

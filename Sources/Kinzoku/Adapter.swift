@@ -1,9 +1,3 @@
-@_exported import WgpuHeaders
-#if os(Linux)
-@_exported import Glibc
-#endif
-@_exported import Foundation
-
 public class KZAdapter {
     public var c: WGPUAdapter
     var pointers: (
