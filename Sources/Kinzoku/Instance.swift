@@ -23,11 +23,9 @@ public class KZInstance {
         return KZSurface(wgpuInstanceCreateSurface(c, &descriptor))
     }
     
-    #if !os(macOS)
     public func processEvents() {
         wgpuInstanceProcessEvents(c)
     }
-    #endif
     
     public func requestAdapter(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,

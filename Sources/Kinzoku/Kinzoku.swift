@@ -4,8 +4,6 @@
 #endif
 @_exported import Foundation
 
-public struct MissingStructPointer: Error, CustomStringConvertible { public let description = "Module wgpu-native provided a null pointer to a struct." }
-
 // MARK: - Utility Functions
 
 func manualPointer<T>(_ data: T) -> UnsafeMutablePointer<T> {

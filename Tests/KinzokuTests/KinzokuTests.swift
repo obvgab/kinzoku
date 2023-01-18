@@ -17,7 +17,7 @@ final class KinzokuTests: XCTestCase {
         var limits = KZLimits()
         limits.maxBindGroups = 1
         
-        let (device, queue, deviceStatus, _) = try! adapter.requestDevice(label: "Device", limits: limits)
+        let (device, queue, deviceStatus, _) = adapter.requestDevice(label: "Device", limits: limits)
         XCTAssertEqual(deviceStatus, .success, "Device was not properly received")
         XCTAssertNotNil(device.c, "Device was received, but is nil")
         XCTAssertNotNil(queue.c, "Queue was received, but is nil")
@@ -78,7 +78,7 @@ final class KinzokuTests: XCTestCase {
         
         let limits = KZLimits() // Does this become default/undefined equivalent?
         
-        let (device, queue, deviceStatus, _) = try! adapter.requestDevice(label: "Device", limits: limits)
+        let (device, queue, deviceStatus, _) = adapter.requestDevice(label: "Device", limits: limits)
         XCTAssertEqual(deviceStatus, .success, "Device was not properly received")
         XCTAssertNotNil(device.c, "Device was received, but is nil")
         XCTAssertNotNil(queue.c, "Queue was received, but is nil")
