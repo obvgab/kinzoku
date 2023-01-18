@@ -9,9 +9,9 @@ public class KZShaderSource {
         spirv: UnsafeMutablePointer<WGPUShaderModuleSPIRVDescriptor>?
     )
     
-    init(fromWGSL: URL) throws {
-        pointers.file = strdup(try String(contentsOf: fromWGSL))
-        pointers.label = strdup(fromWGSL.relativePath)
+    init(fromWGSL file: URL) throws {
+        pointers.file = strdup(try String(contentsOf: file))
+        pointers.label = strdup(file.relativePath)
         
         let wgslDescriptor = WGPUShaderModuleWGSLDescriptor(
             chain: WGPUChainedStruct(next: nil, sType: WGPUSType_ShaderModuleWGSLDescriptor),

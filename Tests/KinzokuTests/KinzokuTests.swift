@@ -2,7 +2,7 @@ import XCTest
 @testable import Kinzoku
 
 final class KinzokuTests: XCTestCase {
-    // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c - MacOS
+    // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c
     func testCompute() throws {
         let numbersBase: [UInt32] = [1, 2, 3, 4]
         let numbers = manualPointer(numbersBase)
@@ -17,7 +17,7 @@ final class KinzokuTests: XCTestCase {
         var limits = KZLimits()
         limits.maxBindGroups = 1
         
-        let (device, queue, deviceStatus, _) = adapter.requestDevice(label: "Device", limits: limits)
+        let (device, queue, deviceStatus, _) = try! adapter.requestDevice(label: "Device", limits: limits)
         XCTAssertEqual(deviceStatus, .success, "Device was not properly received")
         XCTAssertNotNil(device.c, "Device was received, but is nil")
         XCTAssertNotNil(queue.c, "Queue was received, but is nil")
@@ -66,7 +66,7 @@ final class KinzokuTests: XCTestCase {
         stagingBuffer.unmap()
     }
     
-    // https://github.com/gfx-rs/wgpu-native/blob/master/examples/triangle/main.c - MacOS
+    // https://github.com/gfx-rs/wgpu-native/blob/master/examples/triangle/main.c
     func testTriangle() throws {
         let instance = KZInstance()
         
@@ -78,7 +78,7 @@ final class KinzokuTests: XCTestCase {
         
         let limits = KZLimits() // Does this become default/undefined equivalent?
         
-        let (device, queue, deviceStatus, _) = adapter.requestDevice(label: "Device", limits: limits)
+        let (device, queue, deviceStatus, _) = try! adapter.requestDevice(label: "Device", limits: limits)
         XCTAssertEqual(deviceStatus, .success, "Device was not properly received")
         XCTAssertNotNil(device.c, "Device was received, but is nil")
         XCTAssertNotNil(queue.c, "Queue was received, but is nil")

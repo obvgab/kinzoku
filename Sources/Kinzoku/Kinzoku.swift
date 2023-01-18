@@ -4,6 +4,8 @@
 #endif
 @_exported import Foundation
 
+public struct MissingStructPointer: Error, CustomStringConvertible { public let description = "Module wgpu-native provided a null pointer to a struct." }
+
 // MARK: - Utility Functions
 
 func manualPointer<T>(_ data: T) -> UnsafeMutablePointer<T> {
@@ -106,21 +108,21 @@ internal let wgpuCommandEncoderSetLabel: @convention(c) (WGPUCommandEncoder, Uns
 internal let wgpuCommandEncoderWriteTimestamp: @convention(c) (WGPUCommandEncoder, WGPUQuerySet, UInt32) -> Void = loader.load("wgpuCommandEncoderWriteTimestamp")
 
 // Methods of ComputePassEncoder
-// begin pipeline
+internal let wgpuComputePassEncoderBeginPipelineStatisticsQuery: @convention(c) (WGPUComputePassEncoder, WGPUQuerySet, UInt32) -> Void = loader.load("wgpuComputePassEncoderBeginPipelineStatisticsQuery")
 internal let wgpuComputePassEncoderDispatchWorkgroups: @convention(c) (WGPUComputePassEncoder, UInt32, UInt32, UInt32) -> Void = loader.load("wgpuComputePassEncoderDispatchWorkgroups")
-// workgroups indirect
+internal let wgpuComputePassEncoderDispatchWorkgroupsIndirect: @convention(c) (WGPUComputePassEncoder, UInt32, UInt32, UInt32) -> Void = loader.load("wgpuComputePassEncoderDispatchWorkgroupsIndirect")
 internal let wgpuComputePassEncoderEnd: @convention(c) (WGPUComputePassEncoder) -> Void = loader.load("wgpuComputePassEncoderEnd")
-// end pipeline
-// debug marker
-// debug pop
-// debug push
+internal let wgpuComputePassEncoderEndPipelineStatisticsQuery: @convention(c) (WGPUComputePassEncoder) -> Void = loader.load("wgpuComputePassEncoderEndPipelineStatisticsQuery")
+internal let wgpuComputePassEncoderInsertDebugMarker: @convention(c) (WGPUComputePassEncoder, UnsafePointer<CChar>?) -> Void = loader.load("wgpuComputePassEncoderInsertDebugMarker")
+internal let wgpuComputePassEncoderPopDebugGroup: @convention(c) (WGPUComputePassEncoder) -> Void = loader.load("wgpuComputePassEncoderPopDebugGroup")
+internal let wgpuComputePassEncoderPushDebugGroup: @convention(c) (WGPUComputePassEncoder, UnsafePointer<CChar>?) -> Void = loader.load("wgpuComputePassEncoderPushDebugGroup")
 internal let wgpuComputePassEncoderSetBindGroup: @convention(c) (WGPUComputePassEncoder, UInt32, WGPUBindGroup, UInt32, UnsafePointer<UInt32>?) -> Void = loader.load("wgpuComputePassEncoderSetBindGroup")
-// set label
+internal let wgpuComputePassEncoderSetLabel: @convention(c) (WGPUComputePassEncoder, UnsafePointer<CChar>?) -> Void = loader.load("wgpuComputePassEncoderSetLabel")
 internal let wgpuComputePassEncoderSetPipeline: @convention(c) (WGPUComputePassEncoder, WGPUComputePipeline) -> Void = loader.load("wgpuComputePassEncoderSetPipeline")
 
 // Methods of ComputePipeline
 internal let wgpuComputePipelineGetBindGroupLayout: @convention(c) (WGPUComputePipeline, UInt32) -> WGPUBindGroupLayout = loader.load("wgpuComputePipelineGetBindGroupLayout")
-// set label
+internal let wgpuComputePipelineSetLabel: @convention(c) (WGPUComputePipeline, UnsafePointer<CChar>?) -> Void = loader.load("wgpuComputePipelineSetLabel")
 
 // Methods of Device
 internal let wgpuDeviceCreateBindGroup: @convention(c) (WGPUDevice, UnsafePointer<WGPUBindGroupDescriptor>?) -> WGPUBindGroup = loader.load("wgpuDeviceCreateBindGroup")
@@ -155,12 +157,78 @@ internal let wgpuInstanceCreateSurface: @convention(c) (WGPUInstance, UnsafePoin
 internal let wgpuInstanceProcessEvents: @convention(c) (WGPUInstance) -> Void = loader.load("wgpuInstanceProcessEvents")
 internal let wgpuInstanceRequestAdapter: @convention(c) (WGPUInstance, UnsafePointer<WGPURequestAdapterOptions>?, WGPURequestAdapterCallback, UnsafeMutableRawPointer?) -> Void = loader.load("wgpuInstanceRequestAdapter")
 
+// Methods of PipelineLayout
+internal let wgpuPipelineLayoutSetLabel: @convention(c) (WGPUPipelineLayout, UnsafePointer<CChar>?) -> Void = loader.load("wgpuPipelineLayoutSetLabel")
+
+// Methods of QuerySet
+internal let wgpuQuerySetDestroy: @convention(c) (WGPUQuerySet) -> Void = loader.load("wgpuQuerySetDestroy")
+internal let wgpuQuerySetSetLabel: @convention(c) (WGPUQuerySet, UnsafePointer<CChar>?) -> Void = loader.load("wgpuQuerySetSetLabel")
+
 // Methods of Queue
-// on submitted
-// set label
+internal let wgpuQueueOnSubmittedWorkDone: @convention(c) (WGPUQueue, WGPUQueueWorkDoneCallback, UnsafeMutableRawPointer?) -> Void = loader.load("wgpuQueueOnSubmittedWorkDone")
+internal let wgpuQueueSetLabel: @convention(c) (WGPUQueue, UnsafePointer<CChar>?) -> Void = loader.load("wgpuQueueSetLabel")
 internal let wgpuQueueSubmit: @convention(c) (WGPUQueue, UInt32, UnsafePointer<WGPUCommandBuffer>?) -> Void = loader.load("wgpuQueueSubmit")
 internal let wgpuQueueWriteBuffer: @convention(c) (WGPUQueue, WGPUBuffer, UInt64, UnsafeRawPointer?, Int) -> Void = loader.load("wgpuQueueWriteBuffer")
-// write texture
+internal let wgpuQueueWriteTexture: @convention(c) (WGPUQueue, UnsafePointer<WGPUImageCopyTexture>?, UnsafeRawPointer?, Int, UnsafePointer<WGPUTextureDataLayout>?, UnsafePointer<WGPUExtent3D>?) -> Void = loader.load("wgpuQueueWriteTexture")
+
+// Methods of RenderBundleEncoder
+// draw
+// draw indexed
+// draw indexed indirect
+// draw indirect
+// finish
+// insert debug
+// pop debug
+// push debug
+// bind group
+// index buffer
+// set label
+// set pipeline
+// vertex buffer
+
+// Methods of RenderPassEncoder
+// occlusion query
+// pipeline query
+// draw
+// draw indexed
+// draw indexed indirect
+// draw indirect
+// end
+// end occlusion
+// end pipeline
+// execute bundles
+// insert debug
+// pop debug
+// push debug
+// bind group
+// blend constant
+// index buffer
+// set label
+// set pipeline
+// scissor rect
+// stencil reference
+// vertex buffer
+// set viewport
+
+// Methods of RenderPipeline
+// bind layout
+// set label
+
+// Methods of ShaderModule
+// get info
+internal let wgpuRenderPipelineSetLabel: @convention(c) (WGPUShaderModule, UnsafePointer<CChar>?) -> Void = loader.load("wgpuRenderPipelineSetLabel")
 
 // Methods of Surface
 internal let wgpuSurfaceGetPreferredFormat: @convention(c) (WGPUSurface, WGPUAdapter) -> WGPUTextureFormat = loader.load("wgpuGetPreferredFormat")
+
+// Methods of SwapChain
+// get current
+internal let wgpuSwapChainPresent: @convention(c) (WGPUSwapChain) -> Void = loader.load("wgpuSwapChainPresent")
+
+// Methods of Texture
+// create view
+internal let wgpuTextureDestroy: @convention(c) (WGPUTexture) -> Void = loader.load("wgpuTextureDestroy")
+internal let wgpuTextureSetLabel: @convention(c) (WGPUTexture, UnsafePointer<CChar>?) -> Void = loader.load("wgpuTextureSetLabel")
+
+// Methods of TextureView
+internal let wgpuTextureViewSetLabel: @convention(c) (WGPUTextureView, UnsafePointer<CChar>?) -> Void = loader.load("wgpuTextureViewSetLabel")

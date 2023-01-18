@@ -1,5 +1,5 @@
 public class KZAdapter {
-    public var c: WGPUAdapter
+    internal var c: WGPUAdapter
     var pointers: (
         label: [UnsafeMutablePointer<CChar>],
         features: [UnsafeMutablePointer<WGPUFeatureName>],
@@ -66,8 +66,9 @@ public class KZAdapter {
         limits: KZLimits,
         queueChain: UnsafePointer<WGPUChainedStruct>? = nil,
         queueLabel: String = ""
-    ) -> (KZDevice, KZQueue, KZDeviceRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
-        let tuplePointer = UnsafeMutablePointer<(WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String)>.allocate(capacity: 1)
+    ) throws -> (KZDevice, KZQueue, KZDeviceRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
+        let tuplePointer = UnsafeMutablePointer<(WGPUDevice?, WGPUQueue?, WGPURequestDeviceStatus, String)>.allocate(capacity: 1)
+        tuplePointer.initialize(to: (nil, nil, WGPURequestDeviceStatus(rawValue: 0x00000002), "")) // ew null pointer, make this better later
         defer { tuplePointer.deallocate() }
         
         let features = features.map { name in WGPUFeatureName(name.rawValue) }
@@ -94,9 +95,12 @@ public class KZAdapter {
             rebound.initialize(to: (device!, wgpuDeviceGetQueue(device!), status, message))
         }, tuplePointer)
         
+        guard let device = tuplePointer.pointee.0 else { throw MissingStructPointer() }
+        guard let queue = tuplePointer.pointee.1 else { throw MissingStructPointer() }
+        
         return (
-            KZDevice(tuplePointer.pointee.0),
-            KZQueue(tuplePointer.pointee.1),
+            KZDevice(device),
+            KZQueue(queue),
             KZDeviceRequestStatus(rawValue: tuplePointer.pointee.2.rawValue) ?? .unknown,
             tuplePointer.pointee.3
         )
