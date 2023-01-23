@@ -14,12 +14,15 @@ public class KZShaderSource {
         pointers.label = strdup(file.relativePath)
         
         let wgslDescriptor = WGPUShaderModuleWGSLDescriptor(
-            chain: WGPUChainedStruct(next: nil, sType: WGPUSType_ShaderModuleWGSLDescriptor),
+            chain: WGPUChainedStruct(
+                next: nil,
+                sType: WGPUSType_ShaderModuleWGSLDescriptor
+            ),
             code: pointers.file
         )
         pointers.wgsl = manualPointer(wgslDescriptor)
         
-        // This seems to be equivalent to (const WGPUChaineStruct *) pointers.wgsl
+        // This seems to be equivalent to (const WGPUChainedStruct *) pointers.wgsl
         // However, I don't really have a way to verify: lldb doesn't provide much insight comparing C to Swift
         let castedPointer = UnsafeRawPointer(pointers.wgsl!).bindMemory(to: WGPUChainedStruct.self, capacity: 1)
 

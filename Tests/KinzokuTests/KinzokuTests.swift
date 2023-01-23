@@ -68,9 +68,13 @@ final class KinzokuTests: XCTestCase {
     
     // https://github.com/gfx-rs/wgpu-native/blob/master/examples/triangle/main.c
     func testTriangle() throws {
-        let instance = KZInstance()
+        let window = NSWindow(contentRect: NSMakeRect(100, 100, 1200, 700), styleMask: .miniaturizable, backing: .buffered, defer: false)
+        window.contentView?.wantsLayer = true
+        window.contentView?.layer = CAMetalLayer()
+        window.makeKeyAndOrderFront(window)
         
-        // surface
+        let instance = KZInstance()
+        let surface = instance.createSurface(metalLayer: window.contentView!.layer! as! CAMetalLayer)
         
         let (adapter, adapterStatus, _) = instance.requestAdapter()
         XCTAssertEqual(adapterStatus, .success, "Adapter was not properly received")

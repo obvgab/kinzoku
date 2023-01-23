@@ -1,8 +1,11 @@
+import QuartzCore
+
 public class KZInstance {
     public var c: WGPUInstance
     var pointers: (
         label: [UnsafeMutablePointer<CChar>],
-        none: Void
+        metalDescriptor: [UnsafePointer<WGPUChainedStruct>],
+        layer: [UnsafeMutableRawPointer]
     )
     
     public init(
@@ -10,7 +13,29 @@ public class KZInstance {
     ) {
         var descriptor = WGPUInstanceDescriptor(nextInChain: chain)
         c = wgpuCreateInstance(&descriptor)
+        
         pointers.label = []
+        pointers.metalDescriptor = []
+        pointers.layer = []
+    }
+    
+    public func createSurface(
+        metalLayer: CAMetalLayer,
+        label: String = ""
+    ) -> KZSurface {
+        let chain = WGPUSurfaceDescriptorFromMetalLayer(
+            chain: WGPUChainedStruct(
+                next: nil,
+                sType: WGPUSType_SurfaceDescriptorFromMetalLayer
+            ),
+            layer: Unmanaged.passUnretained(metalLayer).toOpaque()
+        )
+        
+        let chainPointer = manualPointer(chain)
+        defer { chainPointer.deallocate() }
+        let castedPointer = UnsafeRawPointer(chainPointer).bindMemory(to: WGPUChainedStruct.self, capacity: 1)
+        
+        return createSurface(chain: castedPointer, label: label)
     }
     
     public func createSurface(
