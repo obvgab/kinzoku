@@ -1,8 +1,8 @@
-public struct KZBindGroup { public var c: WGPUBindGroup }
-public struct KZBindGroupLayout { public var c: WGPUBindGroupLayout }
+public struct KZBindGroup { internal var c: WGPUBindGroup }
+public struct KZBindGroupLayout { internal var c: WGPUBindGroupLayout }
 
 public struct KZBindGroupEntry {
-    public var c: WGPUBindGroupEntry
+    internal var c: WGPUBindGroupEntry
     
     init(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
