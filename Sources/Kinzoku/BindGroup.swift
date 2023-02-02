@@ -1,8 +1,9 @@
 public struct KZBindGroup { public var c: WGPUBindGroup }
 public struct KZBindGroupLayout { public var c: WGPUBindGroupLayout }
 
-public typealias KZBindGroupEntry = WGPUBindGroupEntry
-extension KZBindGroupEntry {
+public struct KZBindGroupEntry {
+    public var c: WGPUBindGroupEntry
+    
     init(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         binding: UInt32 = 0,
@@ -12,7 +13,7 @@ extension KZBindGroupEntry {
         sampler: WGPUSampler? = nil, // Replace
         view: WGPUTextureView? = nil // Replace
     ) {
-        self = WGPUBindGroupEntry(
+        self.c = WGPUBindGroupEntry(
             nextInChain: chain,
             binding: binding,
             buffer: buffer?.c,
