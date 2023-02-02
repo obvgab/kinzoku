@@ -82,7 +82,7 @@ public class KZDevice {
         consts: [WGPUConstantEntry] = [] // We might want our own struct here
     ) -> KZComputePipeline {
         let constsPointer = manualPointer(consts); let labelPointer = strdup(label); let entryLabel = strdup(entry);
-        defer { constsPointer.deallocate(); labelPointer?.deallocate(); entryLabel?.deallocate() }
+        defer { constsPointer.deallocate(); free(labelPointer); free(entryLabel) }
         
         var descriptor = WGPUComputePipelineDescriptor(
             nextInChain: chain,
@@ -98,6 +98,19 @@ public class KZDevice {
         )
         
         return KZComputePipeline(c: wgpuDeviceCreateComputePipeline(c, &descriptor))
+    }
+    
+    public func createRenderPipeline(
+        chain: UnsafePointer<WGPUChainedStruct>? = nil,
+        label: String = "",
+        layout: KZPipelineLayout? = nil
+        // VertexState
+        // PrimitiveState
+        // DepthStencilState
+        // MultiSampleState
+        // FragmentState
+    ) {
+        
     }
     
     public func createCommandEncoder(

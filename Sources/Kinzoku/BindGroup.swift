@@ -1,9 +1,8 @@
 public struct KZBindGroup { internal var c: WGPUBindGroup }
 public struct KZBindGroupLayout { internal var c: WGPUBindGroupLayout }
 
-public struct KZBindGroupEntry {
-    internal var c: WGPUBindGroupEntry
-    
+public typealias KZBindGroupEntry = WGPUBindGroupEntry // We can extend c structs without OpaquePointer worries
+extension KZBindGroupEntry {
     init(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         binding: UInt32 = 0,
@@ -13,7 +12,7 @@ public struct KZBindGroupEntry {
         sampler: WGPUSampler? = nil, // Replace
         view: WGPUTextureView? = nil // Replace
     ) {
-        self.c = WGPUBindGroupEntry(
+        self = WGPUBindGroupEntry(
             nextInChain: chain,
             binding: binding,
             buffer: buffer?.c,

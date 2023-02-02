@@ -6,4 +6,8 @@ public struct KZComputePipeline {
     }
 }
 
+public struct KZRenderPipeline {
+    public var c: WGPURenderPipeline
+}
+
 public struct KZPipelineLayout { public var c: WGPUPipelineLayout }

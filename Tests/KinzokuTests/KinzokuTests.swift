@@ -89,6 +89,9 @@ final class KinzokuTests: XCTestCase {
         
         // Callbacks should be here, but we might want to rethink those
         
-        let _ = try! KZShaderSource(fromWGSL: URL(fileURLWithPath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
+        let source = try! KZShaderSource(fromWGSL: URL(fileURLWithPath: Bundle.module.path(forResource: "triangle", ofType: "wgsl")!))
+        
+        let swapChainFormat = surface.getPreferredFormat(adapter: adapter)
+        
     }
 }

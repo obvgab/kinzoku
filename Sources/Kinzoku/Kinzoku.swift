@@ -132,7 +132,7 @@ internal let wgpuDeviceCreateComputePipeline: @convention(c) (WGPUDevice, Unsafe
 // pipeline layout
 // query set
 // render bundle
-// render pipeline
+internal let wgpuDeviceCreateRenderPipeline: @convention(c) (WGPUDevice, UnsafePointer<WGPURenderPipelineDescriptor>) -> WGPURenderPipeline = loader.load("wgpuDeviceCreateRenderPipeline")
 // render async
 // sampler
 internal let wgpuDeviceCreateShaderModule: @convention(c) (WGPUDevice, UnsafePointer<WGPUShaderModuleDescriptor>?) -> WGPUShaderModule = loader.load("wgpuDeviceCreateShaderModule")

@@ -13,6 +13,7 @@ public class KZCommandEncoder {
         writes: [WGPUComputePassTimestampWrite] = [] // Replace
     ) -> KZComputePassEncoder {
         let labelPointer = strdup(label); let writesPointer = manualPointer(writes);
+        defer { free(labelPointer); writesPointer.deallocate() }
         
         var descriptor = WGPUComputePassDescriptor(
             nextInChain: chain,
@@ -38,7 +39,7 @@ public class KZCommandEncoder {
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = ""
     ) -> KZCommandBuffer {
-        let labelPointer = strdup(label); defer { labelPointer?.deallocate() }
+        let labelPointer = strdup(label); defer { free(labelPointer) }
         
         var descriptor = WGPUCommandBufferDescriptor(nextInChain: chain, label: labelPointer)
         

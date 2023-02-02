@@ -103,10 +103,10 @@ public class KZAdapter {
     }
     
     deinit {
-        pointers.label.forEach { pointer in pointer.deallocate() }
+        pointers.label.forEach { pointer in free(pointer) }
         pointers.features.forEach { pointer in pointer.deallocate() }
         pointers.requiredLimits.forEach { pointer in pointer.deallocate() }
-        pointers.queueLabel.forEach { pointer in pointer.deallocate() }
+        pointers.queueLabel.forEach { pointer in free(pointer) }
     }
 }
 

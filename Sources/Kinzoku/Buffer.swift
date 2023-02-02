@@ -16,6 +16,11 @@ public class KZBuffer {
     }
 }
 
+public typealias KZVertexBufferLayout = WGPUVertexBufferLayout
+extension KZVertexBufferLayout {
+    
+}
+
 public enum KZBufferUsage: UInt32 {
     case none = 0x00000000
     case mapRead = 0x00000001
