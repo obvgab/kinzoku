@@ -20,7 +20,7 @@ public class KZShaderSource {
             ),
             code: pointers.file
         )
-        pointers.wgsl = manualPointer(wgslDescriptor)
+        pointers.wgsl = getCopiedPointer(wgslDescriptor)
         
         // This seems to be equivalent to (const WGPUChainedStruct *) pointers.wgsl
         // However, I don't really have a way to verify: lldb doesn't provide much insight comparing C to Swift

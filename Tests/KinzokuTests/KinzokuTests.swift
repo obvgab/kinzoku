@@ -5,7 +5,7 @@ final class KinzokuTests: XCTestCase {
     // https://github.com/gfx-rs/wgpu-native/blob/master/examples/compute/main.c
     func testCompute() throws {
         let numbersBase: [UInt32] = [1, 2, 3, 4]
-        let numbers = manualPointer(numbersBase)
+        let numbers = getCopiedPointer(numbersBase)
         let numbersSize = MemoryLayout<UInt32>.stride * numbersBase.count
         
         let instance = KZInstance()

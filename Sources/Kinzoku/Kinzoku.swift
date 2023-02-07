@@ -6,18 +6,32 @@
 
 // MARK: - Utility Functions
 
-func manualPointer<T>(_ data: T) -> UnsafeMutablePointer<T> {
+// Needs manual deallocation
+func getCopiedPointer<T>(_ data: T) -> UnsafeMutablePointer<T> {
     let dataPointer = UnsafeMutablePointer<T>.allocate(capacity: 1)
     dataPointer.initialize(to: data)
     
     return dataPointer
 }
 
-func manualPointer<T>(_ data: [T]) -> UnsafeMutablePointer<T> {
+// Needs manual deallocation
+func getCopiedPointer<T>(_ data: [T]) -> UnsafeMutablePointer<T> {
     let dataPointer = UnsafeMutablePointer<T>.allocate(capacity: data.count)
     dataPointer.initialize(from: data, count: data.count)
     
     return dataPointer
+}
+
+// Relies on stack deallocation to invalidate pointer
+func getDanglingPointer<T>(_ data: inout [T]) -> UnsafeMutablePointer<T> {
+    return data.withUnsafeBytes { bytes in
+        return UnsafeMutablePointer(mutating: bytes.baseAddress!.assumingMemoryBound(to: T.self))
+    }
+}
+
+// Relies on stack deallocation to invalidate pointer
+func getDanglingPointer<T>(_ data: inout T) -> UnsafeMutablePointer<T> {
+    return UnsafeMutablePointer(&data)
 }
 
 // MARK: - Library Loading

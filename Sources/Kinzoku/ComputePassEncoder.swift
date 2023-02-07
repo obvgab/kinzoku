@@ -19,7 +19,7 @@ public class KZComputePassEncoder {
         bindGroup: KZBindGroup,
         dynamicOffsets: [UInt32] = []
     ) {
-        pointer.dynamicOffsets = manualPointer(dynamicOffsets) // This might not be necessary
+        pointer.dynamicOffsets = getCopiedPointer(dynamicOffsets) // This might not be necessary
         
         wgpuComputePassEncoderSetBindGroup(c, index, bindGroup.c, UInt32(dynamicOffsets.count), pointer.dynamicOffsets)
     }

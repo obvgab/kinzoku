@@ -12,17 +12,17 @@ public class KZCommandEncoder {
         label: String = "",
         writes: [WGPUComputePassTimestampWrite] = [] // Replace
     ) -> KZComputePassEncoder {
-        let labelPointer = strdup(label); let writesPointer = manualPointer(writes);
-        defer { free(labelPointer); writesPointer.deallocate() }
-        
-        var descriptor = WGPUComputePassDescriptor(
-            nextInChain: chain,
-            label: labelPointer,
-            timestampWriteCount: UInt32(writes.count),
-            timestampWrites: writesPointer
-        )
-        
-        return KZComputePassEncoder(wgpuCommandEncoderBeginComputePass(c, &descriptor))
+        return label.withCString { label in
+            var descriptor = WGPUComputePassDescriptor(
+                nextInChain: chain,
+                label: label,
+                timestampWriteCount: UInt32(writes.count),
+                timestampWrites: getCopiedPointer(writes)
+            )
+            defer { descriptor.timestampWrites.deallocate() }
+            
+            return KZComputePassEncoder(wgpuCommandEncoderBeginComputePass(c, &descriptor))
+        }
     }
     
     public func copyBufferToBuffer(
@@ -39,10 +39,10 @@ public class KZCommandEncoder {
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = ""
     ) -> KZCommandBuffer {
-        let labelPointer = strdup(label); defer { free(labelPointer) }
-        
-        var descriptor = WGPUCommandBufferDescriptor(nextInChain: chain, label: labelPointer)
-        
-        return KZCommandBuffer(wgpuCommandEncoderFinish(c, &descriptor))
+        return label.withCString { label in
+            var descriptor = WGPUCommandBufferDescriptor(nextInChain: chain, label: label)
+            
+            return KZCommandBuffer(wgpuCommandEncoderFinish(c, &descriptor))
+        }
     }
 }

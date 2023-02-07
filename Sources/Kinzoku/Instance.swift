@@ -31,7 +31,7 @@ public class KZInstance {
             layer: Unmanaged.passUnretained(metalLayer).toOpaque()
         )
         
-        let chainPointer = manualPointer(chain)
+        let chainPointer = getCopiedPointer(chain)
         defer { chainPointer.deallocate() }
         let castedPointer = UnsafeRawPointer(chainPointer).bindMemory(to: WGPUChainedStruct.self, capacity: 1)
         
@@ -42,10 +42,14 @@ public class KZInstance {
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = ""
     ) -> KZSurface {
-        pointers.label.append(strdup(label))
-        var descriptor = WGPUSurfaceDescriptor(nextInChain: chain, label: pointers.label.last)
-        
-        return KZSurface(wgpuInstanceCreateSurface(c, &descriptor))
+        return label.withCString { label in
+            var descriptor = WGPUSurfaceDescriptor(
+                nextInChain: chain,
+                label: label
+            )
+            
+            return KZSurface(wgpuInstanceCreateSurface(c, &descriptor))
+        }
     }
     
     public func processEvents() {

@@ -37,18 +37,18 @@ public class KZDevice {
         layout: KZBindGroupLayout? = nil,
         entries: [KZBindGroupEntry] = []
     ) -> KZBindGroup {
-        let entriesPointer = manualPointer(entries); let labelPointer = strdup(label)
-        defer { entriesPointer.deallocate(); labelPointer?.deallocate() }
-        
-        var descriptor = WGPUBindGroupDescriptor(
-            nextInChain: chain,
-            label: labelPointer,
-            layout: layout?.c,
-            entryCount: UInt32(entries.count),
-            entries: entriesPointer
-        )
-        
-        return KZBindGroup(c: wgpuDeviceCreateBindGroup(c, &descriptor))
+        return label.withCString { label in
+            var descriptor = WGPUBindGroupDescriptor(
+                nextInChain: chain,
+                label: label,
+                layout: layout?.c,
+                entryCount: UInt32(entries.count),
+                entries: getCopiedPointer(entries)
+            )
+            defer { descriptor.entries.deallocate() }
+            
+            return KZBindGroup(c: wgpuDeviceCreateBindGroup(c, &descriptor))
+        }
     }
     
     public func createBuffer(
@@ -58,18 +58,19 @@ public class KZDevice {
         size: UInt64 = 0,
         mapped: Bool = false
     ) -> KZBuffer {
-        let labelPointer = strdup(label); defer { labelPointer?.deallocate() }
-        var usageRaw: UInt32 = 0x00000000; usage.forEach { flag in usageRaw |= flag.rawValue }
-        
-        var descriptor = WGPUBufferDescriptor(
-            nextInChain: chain,
-            label: labelPointer,
-            usage: usageRaw,
-            size: size,
-            mappedAtCreation: mapped
-        )
-        
-        return KZBuffer(wgpuDeviceCreateBuffer(c, &descriptor))
+        return label.withCString { label in
+            var usageRaw: UInt32 = 0x00000000; usage.forEach { flag in usageRaw |= flag.rawValue }
+            
+            var descriptor = WGPUBufferDescriptor(
+                nextInChain: chain,
+                label: label,
+                usage: usageRaw,
+                size: size,
+                mappedAtCreation: mapped
+            )
+            
+            return KZBuffer(wgpuDeviceCreateBuffer(c, &descriptor))
+        }
     }
     
     public func createComputePipeline(
@@ -81,23 +82,25 @@ public class KZDevice {
         entry: String = "main",
         consts: [WGPUConstantEntry] = [] // We might want our own struct here
     ) -> KZComputePipeline {
-        let constsPointer = manualPointer(consts); let labelPointer = strdup(label); let entryLabel = strdup(entry);
-        defer { constsPointer.deallocate(); free(labelPointer); free(entryLabel) }
-        
-        var descriptor = WGPUComputePipelineDescriptor(
-            nextInChain: chain,
-            label: labelPointer,
-            layout: layout?.c,
-            compute: WGPUProgrammableStageDescriptor(
-                nextInChain: stageChain,
-                module: module?.c,
-                entryPoint: entryLabel,
-                constantCount: UInt32(consts.count),
-                constants: constsPointer
-            )
-        )
-        
-        return KZComputePipeline(c: wgpuDeviceCreateComputePipeline(c, &descriptor))
+        return label.withCString { label in
+            return entry.withCString { entry in
+                var descriptor = WGPUComputePipelineDescriptor(
+                    nextInChain: chain,
+                    label: label,
+                    layout: layout?.c,
+                    compute: WGPUProgrammableStageDescriptor(
+                        nextInChain: stageChain,
+                        module: module?.c,
+                        entryPoint: entry,
+                        constantCount: UInt32(consts.count),
+                        constants: getCopiedPointer(consts)
+                    )
+                )
+                defer { descriptor.compute.constants.deallocate() }
+                
+                return KZComputePipeline(c: wgpuDeviceCreateComputePipeline(c, &descriptor))
+            }
+        }
     }
     
     public func createRenderPipeline(
@@ -117,14 +120,14 @@ public class KZDevice {
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = ""
     ) -> KZCommandEncoder {
-        let labelPointer = strdup(label); defer { labelPointer?.deallocate() }
-        
-        var descriptor = WGPUCommandEncoderDescriptor(
-            nextInChain: chain,
-            label: labelPointer
-        )
-        
-        return KZCommandEncoder(wgpuDeviceCreateCommandEncoder(c, &descriptor))
+        return label.withCString { label in
+            var descriptor = WGPUCommandEncoderDescriptor(
+                nextInChain: chain,
+                label: label
+            )
+            
+            return KZCommandEncoder(wgpuDeviceCreateCommandEncoder(c, &descriptor))
+        }
     }
     
     public func getQueue() -> KZQueue {

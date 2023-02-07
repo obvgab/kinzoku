@@ -1,19 +1,8 @@
 public class KZAdapter {
     internal var c: WGPUAdapter
-    var pointers: (
-        label: [UnsafeMutablePointer<CChar>],
-        features: [UnsafeMutablePointer<WGPUFeatureName>],
-        requiredLimits: [UnsafeMutablePointer<WGPURequiredLimits>],
-        queueLabel: [UnsafeMutablePointer<CChar>]
-    )
     
     init(_ c: WGPUAdapter) {
         self.c = c
-        
-        pointers.label = []
-        pointers.features = []
-        pointers.requiredLimits = []
-        pointers.queueLabel = []
     }
     
     public func enumerateFeatures() -> [KZFeature] {
@@ -67,46 +56,39 @@ public class KZAdapter {
         queueChain: UnsafePointer<WGPUChainedStruct>? = nil,
         queueLabel: String = ""
     ) -> (KZDevice, KZQueue, KZDeviceRequestStatus, String) { // Maybe we don't need to provide status and message, future refactor?
-        let tuplePointer = UnsafeMutablePointer<(WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String)>.allocate(capacity: 1)
-        defer { tuplePointer.deallocate() }
-        
-        let features = features.map { name in WGPUFeatureName(name.rawValue) }
-        let requiredLimits = WGPURequiredLimits(nextInChain: nil, limits: limits)
-        
-        pointers.features.append(manualPointer(features))
-        pointers.requiredLimits.append(manualPointer(requiredLimits))
-        pointers.label.append(strdup(label))
-        pointers.queueLabel.append(strdup(queueLabel))
-        
-        var descriptor = WGPUDeviceDescriptor(
-            nextInChain: chain,
-            label: pointers.label.last,
-            requiredFeaturesCount: UInt32(features.count),
-            requiredFeatures: pointers.features.last,
-            requiredLimits: pointers.requiredLimits.last,
-            defaultQueue: WGPUQueueDescriptor(nextInChain: queueChain, label: pointers.queueLabel.last)
-        )
-        
-        wgpuAdapterRequestDevice(c, &descriptor, { status, device, message, rawTuplePointer in
-            let rebound = rawTuplePointer!.bindMemory(to: (WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String).self, capacity: 1)
-            
-            let message = (message != nil) ? String(cString: message!) : ""
-            rebound.initialize(to: (device!, wgpuDeviceGetQueue(device!), status, message))
-        }, tuplePointer)
-        
-        return (
-            KZDevice(tuplePointer.pointee.0),
-            KZQueue(tuplePointer.pointee.1),
-            KZDeviceRequestStatus(rawValue: tuplePointer.pointee.2.rawValue) ?? .unknown,
-            tuplePointer.pointee.3
-        )
-    }
-    
-    deinit {
-        pointers.label.forEach { pointer in free(pointer) }
-        pointers.features.forEach { pointer in pointer.deallocate() }
-        pointers.requiredLimits.forEach { pointer in pointer.deallocate() }
-        pointers.queueLabel.forEach { pointer in free(pointer) }
+        return label.withCString { label in
+            return queueLabel.withCString { queueLabel in
+                let tuplePointer = UnsafeMutablePointer<(WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String)>.allocate(capacity: 1)
+                defer { tuplePointer.deallocate() }
+                
+                let features = features.map { name in WGPUFeatureName(name.rawValue) }
+                let requiredLimits = WGPURequiredLimits(nextInChain: nil, limits: limits)
+                
+                var descriptor = WGPUDeviceDescriptor(
+                    nextInChain: chain,
+                    label: label,
+                    requiredFeaturesCount: UInt32(features.count),
+                    requiredFeatures: getCopiedPointer(features),
+                    requiredLimits: getCopiedPointer(requiredLimits),
+                    defaultQueue: WGPUQueueDescriptor(nextInChain: queueChain, label: queueLabel)
+                )
+                defer { descriptor.requiredFeatures.deallocate(); descriptor.requiredLimits.deallocate() }
+                
+                wgpuAdapterRequestDevice(c, &descriptor, { status, device, message, rawTuplePointer in
+                    let rebound = rawTuplePointer!.bindMemory(to: (WGPUDevice, WGPUQueue, WGPURequestDeviceStatus, String).self, capacity: 1)
+                    
+                    let message = (message != nil) ? String(cString: message!) : ""
+                    rebound.initialize(to: (device!, wgpuDeviceGetQueue(device!), status, message))
+                }, tuplePointer)
+                
+                return (
+                    KZDevice(tuplePointer.pointee.0),
+                    KZQueue(tuplePointer.pointee.1),
+                    KZDeviceRequestStatus(rawValue: tuplePointer.pointee.2.rawValue) ?? .unknown,
+                    tuplePointer.pointee.3
+                )
+            }
+        }
     }
 }
 

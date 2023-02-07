@@ -32,7 +32,8 @@ General Notes
    - ~~Would also remove all dependencies from the project, which is nice. WgpuHeaders would be irrelevent~~
    - ~~Callbacks can become regular closures probably~~
  - The wgpu.h free functions are interesting. We unfortunately have to use strdup() constantly, so I wonder if it cleans those types for structs
- - Maybe change the definition of `manualPointer()` so it uses `Unmanaged.passUnretained()`. That way Swift's ARC handles memory as normal and we don't have to figure out deinit constantly
+ - ~~Maybe change the definition of `manualPointer()` so it uses `Unmanaged.passUnretained()`. That way Swift's ARC handles memory as normal and we don't have to figure out deinit constantly~~
+   - Changed definition. manualPointer has been split to have a copying method and a dangling method
 
 1. [Not possible due to all C types being derivatives of OpaquePointer]
 2. [Not possible, WGPUTypes cannot be the basis of enums, raw values are required (but inits might be possible)]
