@@ -18,7 +18,7 @@ General Notes
    - Maybe implement a .intoChainedStruct() for all classes, or allow all classes in the init()?
  - (1) ~~Consider making any structs/classes that are just 'public var c: WGPUClass' into typealiases~~
    - ~~Typealiases can have extensions for other functions. Any non-pointer holding classes can be converted easily~~
-     - ~~Extensions also may allow for getters/setters, so interfacing swift-like would be better~~
+     - ~~Extensions also may allow for getters/setters, so interfacing Swift-like would be better~~
      - ~~Removes the issue of invoking .c constantly, we can just use ?~~
      - ~~Maybe make instance hold all pointers in [UnsafeMutablePointer<Any>], deallocate all at once (in Instance, for example--see the first comment)~~
        - ~~Less memory efficient, cleaner code~~
@@ -27,7 +27,7 @@ General Notes
  - Compress class files into more abstract files
  - (2) ~~Set enums to have primitive WGPUTypes, that way no conversion is necessary (removes all the calls to constructors and .rawValues)~~
 
- - Make functions with callbacks (presumably async) into actual swift async functions
+ - Make functions with callbacks (presumably async) into actual Swift async functions
  - (3) ~~Eventually exclude the header files, because we basically define it ourselves in this file~~
    - ~~Would also remove all dependencies from the project, which is nice. WgpuHeaders would be irrelevent~~
    - ~~Callbacks can become regular closures probably~~
