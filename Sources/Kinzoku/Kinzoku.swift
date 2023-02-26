@@ -150,7 +150,7 @@ internal let wgpuDeviceCreateRenderPipeline: @convention(c) (WGPUDevice, UnsafeP
 // render async
 // sampler
 internal let wgpuDeviceCreateShaderModule: @convention(c) (WGPUDevice, UnsafePointer<WGPUShaderModuleDescriptor>?) -> WGPUShaderModule = loader.load("wgpuDeviceCreateShaderModule")
-// swap chain
+internal let wgpuDeviceCreateSwapChain: @convention(c) (WGPUDevice, WGPUSurface, UnsafePointer<WGPUSwapChainDescriptor>?) -> WGPUSwapChain = loader.load("wgpuDeviceCreateSwapChain")
 // texture
 // destroy
 internal let wgpuDeviceEnumerateFeatures: @convention(c) (WGPUDevice, UnsafeMutablePointer<WGPUFeatureName>?) -> Int = loader.load("wgpuDeviceEnumerateFeatures")
@@ -201,11 +201,11 @@ internal let wgpuQueueWriteTexture: @convention(c) (WGPUQueue, UnsafePointer<WGP
 // Methods of RenderPassEncoder
 // occlusion query
 // pipeline query
-// draw
+internal let wgpuRenderPassEncoderDraw: @convention(c) (WGPURenderPassEncoder, UInt32, UInt32, UInt32, UInt32) -> Void = loader.load("wgpuRenderPassEncoderDraw")
 // draw indexed
 // draw indexed indirect
 // draw indirect
-// end
+internal let wgpuRenderPassEncoderEnd: @convention(c) (WGPURenderPassEncoder) -> Void = loader.load("wgpuRenderPassEncoderEnd")
 // end occlusion
 // end pipeline
 // execute bundles
@@ -216,7 +216,7 @@ internal let wgpuQueueWriteTexture: @convention(c) (WGPUQueue, UnsafePointer<WGP
 // blend constant
 // index buffer
 // set label
-// set pipeline
+internal let wgpuRenderPassEncoderSetPipeline: @convention(c) (WGPURenderPassEncoder, WGPURenderPipeline) -> Void = loader.load("wgpuRenderPassEncoderSetPipeline")
 // scissor rect
 // stencil reference
 // vertex buffer
@@ -231,10 +231,10 @@ internal let wgpuQueueWriteTexture: @convention(c) (WGPUQueue, UnsafePointer<WGP
 internal let wgpuRenderPipelineSetLabel: @convention(c) (WGPUShaderModule, UnsafePointer<CChar>?) -> Void = loader.load("wgpuRenderPipelineSetLabel")
 
 // Methods of Surface
-internal let wgpuSurfaceGetPreferredFormat: @convention(c) (WGPUSurface, WGPUAdapter) -> WGPUTextureFormat = loader.load("wgpuGetPreferredFormat")
+internal let wgpuSurfaceGetPreferredFormat: @convention(c) (WGPUSurface, WGPUAdapter) -> WGPUTextureFormat = loader.load("wgpuSurfaceGetPreferredFormat")
 
 // Methods of SwapChain
-// get current
+internal let wgpuSwapChainGetCurrentTextureView: @convention(c) (WGPUSwapChain) -> WGPUTextureView = loader.load("wgpuSwapChainGetCurrentTextureView")
 internal let wgpuSwapChainPresent: @convention(c) (WGPUSwapChain) -> Void = loader.load("wgpuSwapChainPresent")
 
 // Methods of Texture
@@ -244,3 +244,4 @@ internal let wgpuTextureSetLabel: @convention(c) (WGPUTexture, UnsafePointer<CCh
 
 // Methods of TextureView
 internal let wgpuTextureViewSetLabel: @convention(c) (WGPUTextureView, UnsafePointer<CChar>?) -> Void = loader.load("wgpuTextureViewSetLabel")
+internal let wgpuTextureViewDrop: @convention(c) (WGPUTextureView) -> Void = loader.load("wgpuTextureViewDrop")
