@@ -955,7 +955,7 @@ public enum KZNativeSType: UInt32 {
     case ceExtras = 0x60000006
     case force32 = 0x7FFFFFFF
 
-    var tedLimitsExtras: KZNativeSType {
+    public static var tedLimitsExtras: KZNativeSType {
         return .edLimitsExtras
     }
 

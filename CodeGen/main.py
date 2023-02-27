@@ -2,9 +2,9 @@ import subprocess
 import os
 
 from typing import Any
-from pycparser import c_parser, c_ast
+from pycparser import c_parser
 
-from lib.generators import (
+from lib.transformers import (
     FunctionTransformer,
     Writer,
     Transformer,
@@ -12,20 +12,32 @@ from lib.generators import (
     EnumTransformer
 )
 
+
 def parse(file: str):
     # Preprocess the header file as required by the parser
-    text = subprocess.check_output(["clang", "-E", file]).decode("utf-8")
+    text = subprocess.check_output(
+        ["clang", "-E", file]
+    ).decode("utf-8")
+
     def condition(line: str) -> bool:
-        return line.strip() != "typedef __builtin_va_list __darwin_va_list;"
+        broken_line = "typedef __builtin_va_list __darwin_va_list;"
+        return line.strip() != broken_line
     lines = filter(condition, text.split("\n"))
 
     # Parse the header
     parser = c_parser.CParser()
     return parser.parse("\n".join(lines), filename="wgpu.h")
 
-def apply_transformer(transformer: Transformer, ast, output_dir: str) -> list[Any]:
-    """Returns the transformers internal representation of the ast so that
-    proceeding transformers can reuse it.
+
+def run_transformer(
+        transformer: Transformer,
+        ast,
+        output_dir: str) -> list[Any]:
+    """Runs a transformer that generates a specific set of boilerplate
+    code from the header's ast. The transformers internal
+    representation of the ast is returned so that subsequent
+    transformers can have richer context without having to complicate
+    their preprocessing step.
     """
 
     output_file = f"{output_dir}/{transformer.output_file}"
@@ -34,7 +46,7 @@ def apply_transformer(transformer: Transformer, ast, output_dir: str) -> list[An
     visitor_outputs = []
     for decl in ast.ext:
         output = transformer.visit(decl)
-        if output != None:
+        if output is not None:
             visitor_outputs.append(output)
 
     # Generate code from the intermediate representation.
@@ -44,7 +56,7 @@ def apply_transformer(transformer: Transformer, ast, output_dir: str) -> list[An
     // edit this file directly. Edit the corresponding generator instead.
     """)
     writer.line("")
-    if transformer.prelude != None:
+    if transformer.prelude is not None:
         writer.block(transformer.prelude)
     transformer.gen(visitor_outputs, writer)
 
@@ -54,31 +66,31 @@ def apply_transformer(transformer: Transformer, ast, output_dir: str) -> list[An
 
     return visitor_outputs
 
-ast = parse("./wgpu.h")
 
-output_dir = "../Sources/Kinzoku/Generated"
-os.makedirs(output_dir, exist_ok=True)
+def main():
+    ast = parse("./headers/wgpu.h")
+
+    output_dir = "../Sources/Kinzoku/Generated"
+    os.makedirs(output_dir, exist_ok=True)
+
+    swift_funcs = run_transformer(
+        FunctionTransformer(),
+        ast,
+        output_dir
+    )
+
+    run_transformer(
+        EnumTransformer(),
+        ast,
+        output_dir
+    )
+
+    run_transformer(
+        StructTransformer(swift_funcs),
+        ast,
+        output_dir
+    )
 
 
-swift_funcs = apply_transformer(
-    FunctionTransformer(),
-    ast,
-    output_dir
-)
-
-swift_enums = apply_transformer(
-    EnumTransformer(),
-    ast,
-    output_dir
-)
-
-swift_structs = apply_transformer(
-    StructTransformer(swift_funcs),
-    ast,
-    output_dir
-)
-
-# Generate types
-
-# TODO: Fix enum generation for KZInstanceBackend (have to evaluate constants to obtain equivalent
-# literals)
+if __name__ == "__main__":
+    main()

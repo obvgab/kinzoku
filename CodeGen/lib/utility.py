@@ -1,15 +1,44 @@
 from pycparser import c_ast
 
-swift_keywords = ["internal", "default", "repeat"]
-replacements = {
+_type_rewrites = {
+    "void": "Void",
+    "char": "CChar",
+    "int": "Int32",
+    "long": "Int64",
+    "uint32_t": "UInt32",
+    "uint64_t": "UInt64",
+    "int32_t": "Int32",
+    "int64_t": "Int64",
+    "size_t": "Int",
+    "_Bool": "Bool",
+    "float": "Float",
+    "UnsafeMutablePointer<Void>?": "UnsafeMutableRawPointer?"
+}
+_swift_keywords = ["internal", "default", "repeat"]
+_shorthand_replacements = {
     "src": "source",
     "dst": "destination"
 }
-acronyms = [
+_acronyms = [
     "CPU",
     "GPU",
     "GL"
 ]
+
+def _rewrite_type(name: str) -> str:
+    if name in _type_rewrites:
+        return _type_rewrites[name]
+    else:
+        return name
+
+def c_type_to_swift_type(t) -> str:
+    if type(t) == c_ast.TypeDecl:
+        return _rewrite_type(t.type.names[0])
+    elif type(t) == c_ast.PtrDecl:
+        inner = _rewrite_type(t.type.type.names[0])
+        return _rewrite_type("UnsafeMutablePointer<" + inner + ">?")
+    else:
+        raise Exception("Unable to convert C type to Swift Type: " + t)
 
 def stringify(node) -> str:
     if type(node) == c_ast.Constant:
@@ -45,7 +74,7 @@ def detect_casing(identifier: str) -> str:
         return "unknown"
 
 def swiftify_identifier(identifier: str) -> str:
-    if identifier in acronyms:
+    if identifier in _acronyms:
         return identifier.lower()
 
     casing = detect_casing(identifier)
@@ -69,15 +98,15 @@ def swiftify_identifier(identifier: str) -> str:
         parts = [identifier]
 
     for (i, part) in enumerate(parts):
-        parts[i] = replacements.get(part, part)
-        if part in replacements:
-            parts[i] = replacements[part]
+        parts[i] = _shorthand_replacements.get(part, part)
+        if part in _shorthand_replacements:
+            parts[i] = _shorthand_replacements[part]
 
     for (i, part) in enumerate(parts[1:]):
         parts[i + 1] = part[0].upper() + part[1:]
 
     swift_identifier = "".join(parts)
-    if swift_identifier in swift_keywords:
+    if swift_identifier in _swift_keywords:
         swift_identifier = f"`{swift_identifier}`"
     elif not swift_identifier[0].isalpha():
         swift_identifier = f"_{swift_identifier}"
