@@ -8,11 +8,11 @@ public class KZShaderSource {
         label: UnsafeMutablePointer<CChar>,
         spirv: UnsafeMutablePointer<WGPUShaderModuleSPIRVDescriptor>?
     )
-    
+
     init(fromWGSL file: URL) throws {
         pointers.file = strdup(try String(contentsOf: file))
         pointers.label = strdup(file.relativePath)
-        
+
         let wgslDescriptor = WGPUShaderModuleWGSLDescriptor(
             chain: WGPUChainedStruct(
                 next: nil,
@@ -21,7 +21,7 @@ public class KZShaderSource {
             code: pointers.file
         )
         pointers.wgsl = getCopiedPointer(wgslDescriptor)
-        
+
         // This seems to be equivalent to (const WGPUChainedStruct *) pointers.wgsl
         // However, I don't really have a way to verify: lldb doesn't provide much insight comparing C to Swift
         let castedPointer = UnsafeRawPointer(pointers.wgsl!).bindMemory(to: WGPUChainedStruct.self, capacity: 1)
@@ -32,16 +32,16 @@ public class KZShaderSource {
             hintCount: 0,
             hints: nil
         )
-        
+
         pointers.spirv = nil
     }
-    
+
     /*
     init(fromSPIRV: URL) {
-        
+
     }
     */
-    
+
     deinit {
         pointers.file.deallocate()
         pointers.label.deallocate()
