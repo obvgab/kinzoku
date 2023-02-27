@@ -1,7 +1,7 @@
 public enum KZAdapterType: UInt32 {
     case discreteGPU = 0x00000000
     case integratedGPU = 0x00000001
-    case cPU = 0x00000002
+    case cpu = 0x00000002
     case unknown = 0x00000003
     case force32 = 0x7FFFFFFF
 
@@ -30,8 +30,8 @@ public enum KZAddressMode: UInt32 {
 public enum KZBackendType: UInt32 {
     case null = 0x00000000
     case webGPU = 0x00000001
-    case d3D11 = 0x00000002
-    case d3D12 = 0x00000003
+    case d3d11 = 0x00000002
+    case d3d12 = 0x00000003
     case metal = 0x00000004
     case vulkan = 0x00000005
     case openGL = 0x00000006
@@ -49,15 +49,15 @@ public enum KZBackendType: UInt32 {
 public enum KZBlendFactor: UInt32 {
     case zero = 0x00000000
     case one = 0x00000001
-    case src = 0x00000002
+    case source = 0x00000002
     case oneMinusSource = 0x00000003
-    case srcAlpha = 0x00000004
+    case sourceAlpha = 0x00000004
     case oneMinusSourceAlpha = 0x00000005
-    case dst = 0x00000006
+    case destination = 0x00000006
     case oneMinusDestination = 0x00000007
-    case dstAlpha = 0x00000008
+    case destinationAlpha = 0x00000008
     case oneMinusDestinationAlpha = 0x00000009
-    case srcAlphaSaturated = 0x0000000A
+    case sourceAlphaSaturated = 0x0000000A
     case constant = 0x0000000B
     case oneMinusConstant = 0x0000000C
     case force32 = 0x7FFFFFFF
@@ -287,8 +287,8 @@ public enum KZFilterMode: UInt32 {
     }
 }
 public enum KZFrontFace: UInt32 {
-    case cCW = 0x00000000
-    case cW = 0x00000001
+    case ccw = 0x00000000
+    case cw = 0x00000001
     case force32 = 0x7FFFFFFF
 
     var cRepr: WGPUFrontFace {
@@ -597,9 +597,9 @@ public enum KZTextureComponentType: UInt32 {
     }
 }
 public enum KZTextureDimension: UInt32 {
-    case _1D = 0x00000000
-    case _2D = 0x00000001
-    case _3D = 0x00000002
+    case _1d = 0x00000000
+    case _2d = 0x00000001
+    case _3d = 0x00000002
     case force32 = 0x7FFFFFFF
 
     var cRepr: WGPUTextureDimension {
@@ -736,12 +736,12 @@ public enum KZTextureSampleType: UInt32 {
 }
 public enum KZTextureViewDimension: UInt32 {
     case undefined = 0x00000000
-    case _1D = 0x00000001
-    case _2D = 0x00000002
+    case _1d = 0x00000001
+    case _2d = 0x00000002
     case _2DArray = 0x00000003
     case cube = 0x00000004
     case cubeArray = 0x00000005
-    case _3D = 0x00000006
+    case _3d = 0x00000006
     case force32 = 0x7FFFFFFF
 
     var cRepr: WGPUTextureViewDimension {
@@ -914,11 +914,11 @@ public enum KZNativeSType: UInt32 {
     }
 }
 public enum KZNativeFeature: UInt32 {
-    case pUSH_CONSTANTS = 0x60000001
-    case tEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES = 0x60000002
-    case mULTI_DRAW_INDIRECT = 0x60000003
-    case mULTI_DRAW_INDIRECT_COUNT = 0x60000004
-    case vERTEX_WRITABLE_STORAGE = 0x60000005
+    case pushConstants = 0x60000001
+    case textureAdapterSpecificFormatFeatures = 0x60000002
+    case multiDrawIndirect = 0x60000003
+    case multiDrawIndirectCount = 0x60000004
+    case vertexWritableStorage = 0x60000005
 
     var cRepr: WGPUNativeFeature {
         return WGPUNativeFeature(rawValue: rawValue)
