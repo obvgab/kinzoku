@@ -4,7 +4,7 @@ import os
 from pycparser import c_parser, c_ast
 
 # Preprocess the header file as required by the parser
-text = subprocess.check_output(["clang", "-E", "wgpu.h"]).decode("utf-8")
+text = subprocess.check_output(["clang", "-E", "./wgpu.h"]).decode("utf-8")
 def condition(line: str) -> bool:
     return line.strip() != "typedef __builtin_va_list __darwin_va_list;"
 lines = filter(condition, text.split("\n"))
@@ -18,7 +18,7 @@ output_dir = "../Sources/Kinzoku/Generated"
 os.makedirs(output_dir, exist_ok=True)
 output_file = f"{output_dir}/Functions.swift"
 
-class TypeException(Exception):
+class CodeGenException(Exception):
     def __init__(self, message):
         self.message = message
 
@@ -53,11 +53,15 @@ def type_to_swift_type(t) -> str:
         inner = rewrite_type(t.type.type.names[0])
         return rewrite_type("UnsafeMutablePointer<" + inner + ">?")
     else:
-        raise TypeException("Unable to convert C type to Swift Type:\n" + t)
+        raise CodeGenException("Unable to convert C type to Swift Type: " + t)
 
 swift_funcs = []
 for decl in ast.ext:
-    if type(decl.type) == c_ast.FuncDecl:
+    if decl.name == "wgpuSurfaceGetCapabilities":
+        # This function has a parameter of type WGPUSurfaceCapabilities (which Swift can't find, and
+        # neither can I). Therefore we skip it.
+        continue
+    elif type(decl.type) == c_ast.FuncDecl:
         func_decl = decl.type
 
         swift_params = []
@@ -68,6 +72,7 @@ for decl in ast.ext:
 
         swift_return = type_to_swift_type(func_decl.type)
 
+
         swift_funcs.append((decl.name, swift_params, swift_return))
 
 lines = [
@@ -75,14 +80,140 @@ lines = [
     "private let loader = Loader()"
 ]
 for (name, params, return_type) in swift_funcs:
-    if name == "wgpuSurfaceGetCapabilities":
-        # This function has a parameter of type WGPUSurfaceCapabilities (which Swift can't find, and
-        # neither can I). Therefore we skip it.
-        continue
-
     params = ", ".join(map(lambda x: x[1], params))
     line = f'let {name}: @convention(c) ({params}) -> {return_type} = loader.load("{name}")'
     lines.append(line)
+
+with open(output_file, "w") as f:
+    f.write("\n".join(lines))
+
+# Generate types
+output_file = f"{output_dir}/Types.swift"
+
+def stringify(node) -> str:
+    if type(node) == c_ast.Constant:
+        return node.value
+    elif type(node) == c_ast.ID:
+        return node.name
+    elif type(node) == c_ast.BinaryOp:
+        left = stringify(node.left)
+        right = stringify(node.right)
+        return f"{left} {node.op} {right}"
+    else:
+        raise CodeGenException(f"Failed to stringify a node: '{node}'")
+
+# TODO: Fix enum case naming convention for `KZNativeFeature`
+# TODO: Special-case name conversion of acronyms such as `GL` to `gl` instead of `gL`
+# TODO: Fix enum generation for KZInstanceBackend (have to evaluate constants to obtain equivalent
+# literals)
+# TODO: Generically escape Swift keywords when used as identifiers
+
+
+swift_keywords = ["internal", "default", "repeat"]
+swift_enums = []
+swift_types = []
+for decl in ast.ext:
+    if type(decl) == c_ast.Typedef and decl.name.startswith("WGPU"):
+        if decl.name == "WGPUInstanceBackend":
+            continue
+
+        if type(decl.type.type) == c_ast.Enum:
+            cases = []
+            enum_raw_type = "UInt32"
+            prefixLength = len(decl.name) + 1
+            for enum_case in decl.type.type.values.enumerators:
+                case_name = enum_case.name[prefixLength:]
+                case_name = case_name[0].lower() + case_name[1:]
+                if not case_name[0].isalpha():
+                    case_name = "_" + case_name
+
+                if case_name in swift_keywords:
+                    case_name = f"`{case_name}`"
+                case_name = case_name.replace("Src", "Source")
+                case_name = case_name.replace("Dst", "Destination")
+
+                value = stringify(enum_case.value)
+                cases.append((case_name, value))
+            swift_enums.append((decl.name, enum_raw_type, cases))
+        else:
+            methods = []
+            prefix = "wgpu" + decl.name[4:]
+            for func in swift_funcs:
+                if func[0].startswith(prefix):
+                    func_name, params, return_type = func
+                    method_name = func_name[len(prefix):]
+                    method_name = method_name[0].lower() + method_name[1:]
+                    if params[0][1] != decl.name:
+                        # Verify match
+                        continue
+                    methods.append((method_name, func_name, params[1:], return_type))
+            swift_types.append((decl.name, methods))
+
+lines = []
+for name, raw_type, cases in swift_enums:
+    swift_name = "KZ" + name[4:]
+    lines.append(f"public enum {swift_name}: {raw_type} {{")
+    seen_values: dict[str, str] = {}
+    duplicates: list[tuple[str, str]] = []
+
+    for case_name, value in cases:
+        if value in seen_values:
+            original_case = seen_values[value]
+            duplicates.append((case_name, original_case))
+            continue
+        seen_values[value] = case_name
+        lines.append(f"    case {case_name} = {value}")
+
+    for shadow_case, original_case in duplicates:
+        lines.append(f"")
+        lines.append(f"    var {shadow_case}: {swift_name} {{")
+        lines.append(f"        return .{original_case}")
+        lines.append(f"    }}")
+
+    lines.append(f"")
+    lines.append(f"    var cRepr: {name} {{")
+    lines.append(f"        return {name}(rawValue: rawValue)")
+    lines.append(f"    }}")
+    lines.append(f"")
+    lines.append(f"    init(_ cRepr: {name}) {{")
+    lines.append(f"         self = {swift_name}(rawValue: cRepr.rawValue)!")
+    lines.append(f"    }}")
+    lines.append(f"}}")
+
+for name, methods in swift_types:
+    if name != "WGPUBuffer":
+        continue
+
+    swift_name = "KZ" + name[4:]
+    lines.append(f"public final class {swift_name} {{")
+    lines.append(f"    var c: {name}")
+    lines.append(f"")
+    lines.append(f"    init(_ c: {name}) {{")
+    lines.append(f"        self.c = c")
+    lines.append(f"    }}")
+    for method_name, func_name, params, return_type in methods:
+        lines.append(f"")
+
+        params_str = ", ".join(f"{name}: {param_type}" for (name, param_type) in params)
+
+        arg_names = ["c"] + [name for (name, _) in params]
+        args = ", ".join(arg_names)
+
+        type_parameters = ""
+        should_cast = False
+        if return_type == "UnsafeMutableRawPointer?":
+            type_parameters = "<T>"
+            return_type = "UnsafeMutablePointer<T>?"
+            should_cast = True
+
+        lines.append(f"    public func {method_name}{type_parameters}({params_str}) -> {return_type} {{")
+        if should_cast:
+            lines.append(f"        let result = {func_name}({args})")
+            lines.append(f"        return result?.bindMemory(to: T.self, capacity: 1)")
+        else:
+            lines.append(f"        return {func_name}({args})")
+        lines.append(f"    }}")
+    lines.append(f"}}")
 
 with open(output_file, "w") as f:
     f.write("\n".join(lines))

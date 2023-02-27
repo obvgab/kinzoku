@@ -1,6 +1,6 @@
 public class KZVertexState {
     var c: WGPUVertexState
-    
+
     init(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         module: KZShaderModule,
@@ -18,7 +18,7 @@ public class KZVertexState {
             buffers: getCopiedPointer(buffers)
         )
     }
-    
+
     deinit {
         c.entryPoint.deallocate()
         c.constants.deallocate()
@@ -28,5 +28,5 @@ public class KZVertexState {
 
 public typealias KZConstant = WGPUConstantEntry
 extension KZConstant {
-    
+
 }

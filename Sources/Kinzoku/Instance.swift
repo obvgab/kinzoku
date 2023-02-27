@@ -61,7 +61,7 @@ public class KZInstance {
         surface: KZSurface? = nil,
         power: KZPowerPreference = .undefined,
         fallback: Bool = false
-    ) -> (KZAdapter, KZAdapterRequestStatus, String) {
+    ) -> (KZAdapter, KZRequestAdapterStatus, String) {
         let tuplePointer = UnsafeMutablePointer<(WGPUAdapter, WGPURequestAdapterStatus, String)>.allocate(capacity: 1)
         defer { tuplePointer.deallocate() }
         
@@ -81,7 +81,7 @@ public class KZInstance {
         
         return (
             KZAdapter(tuplePointer.pointee.0),
-            KZAdapterRequestStatus(rawValue: tuplePointer.pointee.1.rawValue) ?? .unknown,
+            KZRequestAdapterStatus(rawValue: tuplePointer.pointee.1.rawValue) ?? .unknown,
             tuplePointer.pointee.2
         )
     }
@@ -89,19 +89,4 @@ public class KZInstance {
     deinit {
         pointers.label.forEach { pointer in pointer.deallocate() }
     }
-}
-
-public enum KZAdapterRequestStatus: UInt32 {
-    case success = 0x00000000
-    case unavailable = 0x00000001
-    case error = 0x00000002
-    case unknown = 0x00000003
-    case force32 = 0x7FFFFFFF
-}
-
-public enum KZPowerPreference: UInt32 {
-    case undefined = 0x00000000
-    case lowPower = 0x00000001
-    case highPerformance = 0x00000002
-    case force32 = 0x7FFFFFFF
 }
