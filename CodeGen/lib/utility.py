@@ -96,17 +96,7 @@ def swiftify_identifier(identifier: str) -> str:
         parts = identifier.lower().split("_")
         parts = [part.lower() for part in parts if part != ""]
     elif casing == "lower_camel" or casing == "upper_camel":
-        lower_camel = identifier[0].lower() + identifier[1:]
-        parts = []
-        current_part = ""
-        for c in lower_camel:
-            if c.isupper():
-                parts.append(current_part)
-                current_part = c.lower()
-            else:
-                current_part += c.lower()
-        if current_part != "":
-            parts.append(current_part)
+        parts = words_of_camel_case(identifier)
     else:
         parts = [identifier]
 
@@ -124,3 +114,18 @@ def swiftify_identifier(identifier: str) -> str:
     elif not swift_identifier[0].isalpha():
         swift_identifier = f"_{swift_identifier}"
     return swift_identifier
+
+
+def words_of_camel_case(identifier: str) -> list[str]:
+    lower_camel = identifier[0].lower() + identifier[1:]
+    parts = []
+    current_part = ""
+    for c in lower_camel:
+        if c.isupper():
+            parts.append(current_part)
+            current_part = c.lower()
+        else:
+            current_part += c.lower()
+    if current_part != "":
+        parts.append(current_part)
+    return parts

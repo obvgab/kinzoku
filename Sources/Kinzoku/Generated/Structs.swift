@@ -26,7 +26,7 @@ public final class KZBuffer {
         return wgpuBufferMapAsync(c, mode.c.rawValue, offset, size, callback, userData)
     }
 
-    public func setLabel(label: String) {
+    public func setLabel(_ label: String) {
         return wgpuBufferSetLabel(c, label)
     }
 
@@ -46,7 +46,7 @@ public final class KZCommandBuffer {
         self.c = c
     }
 
-    public func setLabel(label: String) {
+    public func setLabel(_ label: String) {
         return wgpuCommandBufferSetLabel(c, label)
     }
 }

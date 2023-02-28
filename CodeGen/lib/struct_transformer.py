@@ -3,7 +3,7 @@ from pycparser import c_ast
 
 from lib.writer import Writer
 from lib.transformer import Transformer
-from lib.utility import swiftify_identifier
+from lib.utility import swiftify_identifier, words_of_camel_case
 from lib.intermediate_representation import (
     Struct,
     Method,
@@ -142,12 +142,23 @@ class StructTransformer(Transformer):
             # called when an instance has no strong references (Swift uses ARC)
             writer.line("deinit {")
         else:
+            method_name_words = words_of_camel_case(method.name)
+
             params = []
+            is_first = True
             for param in method.parameters:
                 type_ = param.type_
                 if type_ in namespace:
                     type_ = namespace[type_].swift_name()
+
                 param_name = swiftify_identifier(param.name)
+
+                # Follow the Swift convention of omitting parameter labels if
+                # the last word of the method name matches the label.
+                if is_first and param_name == method_name_words[-1]:
+                    param_name = f"_ {param_name}"
+                is_first = False
+
                 params.append(f"{param_name}: {type_}")
             params_str = ", ".join(params)
 
