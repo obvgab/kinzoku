@@ -40,7 +40,7 @@ class TypeDecl:
         to a C function.
         """
 
-        return f"{identifier}.c"
+        raise Exception("Unimplemented")
 
 
 @dataclass()
@@ -55,6 +55,9 @@ class Enum(TypeDecl):
     raw_type: str
     cases: list[EnumCase]
 
+    def convert_to_c(self, identifier: str) -> str:
+        return f"{identifier}.c.rawValue"
+
 
 @dataclass()
 class Method:
@@ -68,3 +71,6 @@ class Method:
 class Struct(TypeDecl):
     name: str
     methods: list[Method]
+
+    def convert_to_c(self, identifier: str) -> str:
+        return f"{identifier}.c"

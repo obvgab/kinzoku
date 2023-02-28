@@ -18,7 +18,8 @@ _type_rewrites = {
 _swift_keywords = ["internal", "default", "repeat"]
 _shorthand_replacements = {
     "src": "source",
-    "dst": "destination"
+    "dst": "destination",
+    "userdata": "userData"
 }
 _acronyms = [
     "CPU",

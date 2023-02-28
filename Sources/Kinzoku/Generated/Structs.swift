@@ -22,8 +22,8 @@ public final class KZBuffer {
         return result?.bindMemory(to: T.self, capacity: 1)
     }
 
-    public func mapAsync(mode: WGPUMapModeFlags, offset: Int, size: Int, callback: WGPUBufferMapCallback, userdata: UnsafeMutableRawPointer?) -> Void {
-        return wgpuBufferMapAsync(c, mode, offset, size, callback, userdata)
+    public func mapAsync(mode: KZMapMode, offset: Int, size: Int, callback: WGPUBufferMapCallback, userData: UnsafeMutableRawPointer?) -> Void {
+        return wgpuBufferMapAsync(c, mode.c.rawValue, offset, size, callback, userData)
     }
 
     public func setLabel(label: String) -> Void {

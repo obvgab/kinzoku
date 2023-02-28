@@ -66,7 +66,7 @@ class StructTransformer(Transformer):
         ))
 
         namespace: dict[str, TypeDecl] = {
-            t.name: t for t in self.enums + structs
+            t.name: t for t in (self.enums + structs)
         }
 
         for struct in structs:
@@ -104,6 +104,10 @@ class StructTransformer(Transformer):
             struct_name: str,
             namespace: dict[str, TypeDecl],
             writer: Writer):
+        """A serious clean up is in order for this function. Once it has
+        more functionality implemented it'll definitely get one.
+        """
+
         if method.name == "drop" and struct_name == "WGPUCommandBuffer":
             # At the moment memory management is dodgy and
             # WGPUCommandBuffer shouldn't be auto-freed
@@ -120,7 +124,12 @@ class StructTransformer(Transformer):
             type_ = param.type_
             if type_ in conversions:
                 type_ = conversions[type_][0]
-            params.append(f"{param.name}: {type_}")
+            elif type_ in namespace:
+                type_ = namespace[type_].swift_name()
+            elif type_.endswith("Flags") and type_[:-5] in namespace:
+                type_ = namespace[type_[:-5]].swift_name()
+            param_name = swiftify_identifier(param.name)
+            params.append(f"{param_name}: {type_}")
         params_str = ", ".join(params)
 
         type_parameters = ""
@@ -149,13 +158,19 @@ class StructTransformer(Transformer):
         # Generate arguments
         args = ["c"]
         for param in method.parameters:
+            param_name = swiftify_identifier(param.name)
             if param.type_ in namespace:
-                args.append(namespace[param.type_].convert_to_c(param.name))
+                args.append(namespace[param.type_].convert_to_c(param_name))
+            elif (param.type_.endswith("Flags")
+                    and param.type_[:-5] in namespace):
+                args.append(
+                    namespace[param.type_[:-5]].convert_to_c(param_name)
+                )
             elif param.type_ in conversions:
                 conversion = conversions[param.type_]
-                args.append(conversion[1](param.name))
+                args.append(conversion[1](param_name))
             else:
-                args.append(param.name)
+                args.append(param_name)
         args_str = ", ".join(args)
 
         call = f"{method.c_name}({args_str})"
