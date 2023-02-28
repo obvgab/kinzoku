@@ -14,6 +14,7 @@ _type_rewrites = {
     "float": "Float",
     "UnsafeMutablePointer<Void>?": "UnsafeMutableRawPointer?",
     "UnsafePointer<Void>?": "UnsafeRawPointer?",
+    "UnsafePointer<CChar>?": "String"
 }
 _swift_keywords = ["internal", "default", "repeat"]
 _shorthand_replacements = {

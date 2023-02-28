@@ -8,7 +8,7 @@ public final class KZBuffer {
         self.c = c
     }
 
-    public func destroy() -> Void {
+    public func destroy() {
         return wgpuBufferDestroy(c)
     }
 
@@ -22,15 +22,15 @@ public final class KZBuffer {
         return result?.bindMemory(to: T.self, capacity: 1)
     }
 
-    public func mapAsync(mode: KZMapMode, offset: Int, size: Int, callback: WGPUBufferMapCallback, userData: UnsafeMutableRawPointer?) -> Void {
+    public func mapAsync(mode: KZMapMode, offset: Int, size: Int, callback: WGPUBufferMapCallback, userData: UnsafeMutableRawPointer?) {
         return wgpuBufferMapAsync(c, mode.c.rawValue, offset, size, callback, userData)
     }
 
-    public func setLabel(label: String) -> Void {
+    public func setLabel(label: String) {
         return wgpuBufferSetLabel(c, label)
     }
 
-    public func unmap() -> Void {
+    public func unmap() {
         return wgpuBufferUnmap(c)
     }
 
@@ -46,7 +46,7 @@ public final class KZCommandBuffer {
         self.c = c
     }
 
-    public func setLabel(label: String) -> Void {
+    public func setLabel(label: String) {
         return wgpuCommandBufferSetLabel(c, label)
     }
 }
