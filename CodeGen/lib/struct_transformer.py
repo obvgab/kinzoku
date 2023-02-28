@@ -28,22 +28,35 @@ class StructTransformer(Transformer):
         self.funcs = funcs
         self.enums = enums
 
+        # A mapping used to replace certain return types.
+        self.return_type_replacements = {
+            "UnsafeRawPointer?": "UnsafePointer<T>?",
+            "UnsafeMutableRawPointer?": "UnsafeMutablePointer<T>?"
+        }
+
+        # A mapping used to generate code that converts a return value
+        # from the original type to the new return type (as defined by
+        # `return_type_replacements`).
+        self.return_value_conversions = {
+            "UnsafeRawPointer?": self.gen_raw_pointer_conversion,
+            "UnsafeMutableRawPointer?": self.gen_raw_pointer_conversion
+        }
+
     def visit(self, decl) -> Optional[Struct]:
         if type(decl) == c_ast.Typedef and decl.name.startswith("WGPU"):
             methods = []
             prefix = "wgpu" + decl.name[4:]
 
-            # Search for functions that follow the instance method
-            # pattern and have the current struct as their first
-            # parameter. These will be turned into Swift instance
-            # methods.
+            # Search for functions that follow the instance method pattern
+            # and have the current struct as their first parameter.
             for func in self.funcs:
                 if func.name.startswith(prefix):
                     c_name = func.name
                     method_name = c_name[len(prefix):]
                     method_name = swiftify_identifier(method_name)
 
-                    # Verify match
+                    # Verify that the function is an instance method of the
+                    # current struct.
                     if func.parameters[0].type_ != decl.name:
                         continue
 
@@ -60,6 +73,7 @@ class StructTransformer(Transformer):
 
     def gen(self, visitor_outputs: list[Struct], writer: Writer):
         structs_to_generate = ["WGPUBuffer", "WGPUCommandBuffer"]
+
         structs = list(filter(
             lambda x: x.name in structs_to_generate,
             visitor_outputs
@@ -81,12 +95,16 @@ class StructTransformer(Transformer):
             # Give the type our own prefix to avoid naming clashes
             swift_name = struct.swift_name()
 
-            # Structs are represented as classes for now so that
-            # they can take advantage of automatic memory management.
-            # In future, structs without a `drop` method should
-            # probably just be represented as structs in Swift.
+            # If a struct has a drop method, represent it as a class to
+            # take advantage of ARC.
+            type_of_type = "struct"
+            for method in struct.methods:
+                if method.name == "drop":
+                    type_of_type = "final class"
+                    break
+
             writer.block(f"""
-            public final class {swift_name} {{
+            public {type_of_type} {swift_name} {{
                 var c: {struct.name}
 
                 init(_ c: {struct.name}) {{
@@ -102,6 +120,7 @@ class StructTransformer(Transformer):
                     namespace,
                     writer
                 )
+
             writer.end_scope()
 
     def gen_method(
@@ -110,31 +129,16 @@ class StructTransformer(Transformer):
             struct_name: str,
             namespace: dict[str, TypeDecl],
             writer: Writer):
-        """A serious clean up is in order for this function. Once it has
-        more functionality implemented it'll definitely get one.
+        """Generates the code for a struct's method into the given `Writer`.
         """
-
-        return_type_replacements = {
-            "UnsafeRawPointer?": "UnsafePointer<T>?",
-            "UnsafeMutableRawPointer?": "UnsafeMutablePointer<T>?"
-        }
-
-        return_value_conversions = {
-            "UnsafeRawPointer?": self.gen_raw_pointer_conversion,
-            "UnsafeMutableRawPointer?": self.gen_raw_pointer_conversion
-        }
 
         # TODO: Fix memory management so that all types can use ARC
         non_arc_types = ["WGPUCommandBuffer"]
         if method.name == "drop" and struct_name in non_arc_types:
             return
 
+        # Purely aesthetic
         writer.line("")
-
-        return_type = return_type_replacements.get(
-            method.return_type,
-            method.return_type
-        )
 
         # Generate function signature
         if method.name == "drop":
@@ -142,36 +146,17 @@ class StructTransformer(Transformer):
             # called when an instance has no strong references (Swift uses ARC)
             writer.line("deinit {")
         else:
-            method_name_words = words_of_camel_case(method.name)
+            new_return_type = self.return_type_replacements.get(
+                method.return_type,
+                method.return_type
+            )
 
-            params = []
-            is_first = True
-            for param in method.parameters:
-                type_ = param.type_
-                if type_ in namespace:
-                    type_ = namespace[type_].swift_name()
-
-                param_name = swiftify_identifier(param.name)
-
-                # Follow the Swift convention of omitting parameter labels if
-                # the last word of the method name matches the label.
-                if is_first and param_name == method_name_words[-1]:
-                    param_name = f"_ {param_name}"
-                is_first = False
-
-                params.append(f"{param_name}: {type_}")
-            params_str = ", ".join(params)
-
-            if return_type in return_type_replacements:
-                return_type = return_type_replacements[return_type]
-
-            type_parameters = "<T>" if "<T>" in return_type else ""
-
-            is_void = return_type == "Void"
-            return_clause = "" if is_void else f" -> {return_type}"
-
-            writer.line(f"public func {method.name}{type_parameters}"
-                        f"({params_str}){return_clause} {{")
+            self.gen_method_signature(
+                method,
+                new_return_type,
+                namespace,
+                writer
+            )
         writer.indent()
 
         # Generate arguments
@@ -187,8 +172,8 @@ class StructTransformer(Transformer):
         call = f"{method.c_name}({args_str})"
 
         # Generate method body
-        if method.return_type in return_value_conversions:
-            convert = return_value_conversions[method.return_type]
+        if method.return_type in self.return_value_conversions:
+            convert = self.return_value_conversions[method.return_type]
             conversion_expr = convert("result")
             writer.block(f"""
             let result = {call}
@@ -198,6 +183,50 @@ class StructTransformer(Transformer):
             writer.line(f"return {call}")
 
         writer.end_scope()
+
+    def gen_method_signature(
+            self,
+            method: Method,
+            new_return_type: str,
+            namespace: dict[str, TypeDecl],
+            writer: Writer):
+        """Generates the opening line of a method declaration.
+        """
+
+        method_name_words = words_of_camel_case(method.name)
+
+        # Generate parameters (labels, types, default values etc.)
+        params = []
+        is_first = True
+        for param in method.parameters:
+            # Replace param type with Swift wrapper if one exists
+            type_ = param.type_
+            if type_ in namespace:
+                type_ = namespace[type_].swift_name()
+
+            param_name = swiftify_identifier(param.name)
+
+            # Follow the Swift convention of omitting parameter labels if
+            # the last word of the method name matches the label.
+            if is_first and param_name == method_name_words[-1]:
+                param_name = f"_ {param_name}"
+            is_first = False
+
+            params.append(f"{param_name}: {type_}")
+
+        params_str = ", ".join(params)
+
+        # There is a return type conversion that requires a generic parameter
+        # so we detect that and add one here.
+        type_parameters = "<T>" if "<T>" in new_return_type else ""
+
+        is_void = new_return_type == "Void"
+        return_clause = "" if is_void else f" -> {new_return_type}"
+
+        writer.line(
+            f"public func {method.name}{type_parameters}"
+            f"({params_str}){return_clause} {{"
+        )
 
     def gen_raw_pointer_conversion(self, expr: str) -> str:
         return f"{expr}?.bindMemory(to: T.self, capacity: 1)"
