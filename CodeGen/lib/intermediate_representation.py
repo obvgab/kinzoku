@@ -60,6 +60,12 @@ class Enum(TypeDecl):
 
 
 @dataclass()
+class Member:
+    name: str
+    type_: str
+
+
+@dataclass()
 class Method:
     name: str
     c_name: str
@@ -70,6 +76,7 @@ class Method:
 @dataclass()
 class Struct(TypeDecl):
     name: str
+    members: list[Member]
     methods: list[Method]
 
     def convert_to_c(self, identifier: str) -> str:

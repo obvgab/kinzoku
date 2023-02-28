@@ -12,6 +12,7 @@ _type_rewrites = {
     "size_t": "Int",
     "_Bool": "Bool",
     "float": "Float",
+    "double": "Double",
     "UnsafeMutablePointer<Void>?": "UnsafeMutableRawPointer?",
     "UnsafePointer<Void>?": "UnsafeRawPointer?",
     "UnsafePointer<CChar>?": "String"
@@ -40,7 +41,12 @@ def c_type_to_swift_type(t) -> str:
     if type(t) == c_ast.TypeDecl:
         return _rewrite_type(t.type.names[0])
     elif type(t) == c_ast.PtrDecl:
-        inner = _rewrite_type(t.type.type.names[0])
+        inner = ""
+        if type(t.type.type) == c_ast.Struct:
+            inner = t.type.type.name
+        else:
+            inner = t.type.type.names[0]
+        inner = _rewrite_type(inner)
 
         qualifier = ""
         if "const" not in t.quals and "const" not in t.type.quals:
@@ -96,7 +102,7 @@ def swiftify_identifier(identifier: str) -> str:
         parts = identifier.lower().split("_")
         parts = [part.lower() for part in parts if part != ""]
     elif casing == "lower_camel" or casing == "upper_camel":
-        parts = words_of_camel_case(identifier)
+        parts = camel_case_to_words(identifier)
     else:
         parts = [identifier]
 
@@ -116,7 +122,7 @@ def swiftify_identifier(identifier: str) -> str:
     return swift_identifier
 
 
-def words_of_camel_case(identifier: str) -> list[str]:
+def camel_case_to_words(identifier: str) -> list[str]:
     lower_camel = identifier[0].lower() + identifier[1:]
     parts = []
     current_part = ""

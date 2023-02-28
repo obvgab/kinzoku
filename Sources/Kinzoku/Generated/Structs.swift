@@ -51,10 +51,38 @@ public final class KZCommandBuffer {
     }
 }
 
+public struct KZConstantEntry {
+    var c: WGPUConstantEntry
+
+    init(_ c: WGPUConstantEntry) {
+        self.c = c
+    }
+
+    public init(nextInChain: UnsafePointer<WGPUChainedStruct>? = nil, key: String, value: Double) {
+        self.c = WGPUConstantEntry(nextInChain: nextInChain, key: strdup(key), value: value)
+    }
+}
+
 public struct KZVertexBufferLayout {
     var c: WGPUVertexBufferLayout
 
     init(_ c: WGPUVertexBufferLayout) {
         self.c = c
+    }
+
+    public init(arrayStride: UInt64, stepMode: KZVertexStepMode, attributeCount: UInt32, attributes: UnsafePointer<WGPUVertexAttribute>?) {
+        self.c = WGPUVertexBufferLayout(arrayStride: arrayStride, stepMode: stepMode.c, attributeCount: attributeCount, attributes: attributes)
+    }
+}
+
+public struct KZVertexState {
+    var c: WGPUVertexState
+
+    init(_ c: WGPUVertexState) {
+        self.c = c
+    }
+
+    public init(nextInChain: UnsafePointer<WGPUChainedStruct>? = nil, module: WGPUShaderModule, entryPoint: String, constantCount: UInt32, constants: UnsafePointer<WGPUConstantEntry>?, bufferCount: UInt32, buffers: UnsafePointer<WGPUVertexBufferLayout>?) {
+        self.c = WGPUVertexState(nextInChain: nextInChain, module: module, entryPoint: strdup(entryPoint), constantCount: constantCount, constants: constants, bufferCount: bufferCount, buffers: buffers)
     }
 }
