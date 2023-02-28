@@ -59,7 +59,7 @@ final class KinzokuTests: XCTestCase {
         queue.writeBuffer(buffer: storageBuffer, data: numbers, size: numbersSize)
         queue.submit(count: 1, buffer: commandBuffer)
 
-        stagingBuffer.map(mode: .read, size: numbersSize)
+        stagingBuffer.mapAsync(mode: .read, size: numbersSize)
         device.poll(wait: true)
 
         let times: UnsafeMutablePointer<UInt32> = stagingBuffer.getMappedRange(offset: 0, size: numbersSize)!

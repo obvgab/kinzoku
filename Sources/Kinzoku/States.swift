@@ -15,7 +15,7 @@ public class KZVertexState {
             constantCount: UInt32(constants.count),
             constants: getCopiedPointer(constants),
             bufferCount: UInt32(buffers.count),
-            buffers: getCopiedPointer(buffers)
+            buffers: getCopiedPointer(buffers.map(\.c))
         )
     }
 

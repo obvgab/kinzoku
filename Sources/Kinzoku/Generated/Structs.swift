@@ -12,17 +12,17 @@ public final class KZBuffer {
         return wgpuBufferDestroy(c)
     }
 
-    public func getConstMappedRange<T>(offset: Int, size: Int) -> UnsafePointer<T>? {
+    public func getConstMappedRange<T>(offset: Int = 0, size: Int) -> UnsafePointer<T>? {
         let result = wgpuBufferGetConstMappedRange(c, offset, size)
         return result?.bindMemory(to: T.self, capacity: 1)
     }
 
-    public func getMappedRange<T>(offset: Int, size: Int) -> UnsafeMutablePointer<T>? {
+    public func getMappedRange<T>(offset: Int = 0, size: Int) -> UnsafeMutablePointer<T>? {
         let result = wgpuBufferGetMappedRange(c, offset, size)
         return result?.bindMemory(to: T.self, capacity: 1)
     }
 
-    public func mapAsync(mode: KZMapMode, offset: Int, size: Int, callback: WGPUBufferMapCallback = { _, _ in }, userData: UnsafeMutableRawPointer? = nil) {
+    public func mapAsync(mode: KZMapMode, offset: Int = 0, size: Int, callback: WGPUBufferMapCallback = { _, _ in }, userData: UnsafeMutableRawPointer? = nil) {
         return wgpuBufferMapAsync(c, mode.c.rawValue, offset, size, callback, userData)
     }
 
@@ -48,5 +48,13 @@ public final class KZCommandBuffer {
 
     public func setLabel(_ label: String) {
         return wgpuCommandBufferSetLabel(c, label)
+    }
+}
+
+public struct KZVertexBufferLayout {
+    var c: WGPUVertexBufferLayout
+
+    init(_ c: WGPUVertexBufferLayout) {
+        self.c = c
     }
 }
