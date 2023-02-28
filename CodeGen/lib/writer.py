@@ -11,6 +11,9 @@ class Writer:
         self._indent_level = 0
         self._regenerate_indent_str()
 
+    def write(self, s: str):
+        self._buffer += s
+
     def line(self, line: str):
         if line == "":
             # Avoid trailing spaces caused by indenting an empty line

@@ -12,7 +12,8 @@ _type_rewrites = {
     "size_t": "Int",
     "_Bool": "Bool",
     "float": "Float",
-    "UnsafeMutablePointer<Void>?": "UnsafeMutableRawPointer?"
+    "UnsafeMutablePointer<Void>?": "UnsafeMutableRawPointer?",
+    "UnsafePointer<Void>?": "UnsafeRawPointer?",
 }
 _swift_keywords = ["internal", "default", "repeat"]
 _shorthand_replacements = {
@@ -25,20 +26,28 @@ _acronyms = [
     "GL"
 ]
 
+
 def _rewrite_type(name: str) -> str:
     if name in _type_rewrites:
         return _type_rewrites[name]
     else:
         return name
 
+
 def c_type_to_swift_type(t) -> str:
     if type(t) == c_ast.TypeDecl:
         return _rewrite_type(t.type.names[0])
     elif type(t) == c_ast.PtrDecl:
         inner = _rewrite_type(t.type.type.names[0])
-        return _rewrite_type("UnsafeMutablePointer<" + inner + ">?")
+
+        qualifier = ""
+        if "const" not in t.quals and "const" not in t.type.quals:
+            qualifier = "Mutable"
+
+        return _rewrite_type(f"Unsafe{qualifier}Pointer<{inner}>?")
     else:
         raise Exception("Unable to convert C type to Swift Type: " + t)
+
 
 def stringify(node) -> str:
     if type(node) == c_ast.Constant:
@@ -51,6 +60,7 @@ def stringify(node) -> str:
         return f"{left} {node.op} {right}"
     else:
         raise Exception(f"Failed to stringify a node: '{node}'")
+
 
 def detect_casing(identifier: str) -> str:
     """Returns the most likely casing scheme used by a given identifier.
@@ -72,6 +82,7 @@ def detect_casing(identifier: str) -> str:
         return "snake" if "_" in identifier else "lower_camel"
     else:
         return "unknown"
+
 
 def swiftify_identifier(identifier: str) -> str:
     if identifier in _acronyms:
