@@ -22,7 +22,7 @@ public final class KZBuffer {
         return result?.bindMemory(to: T.self, capacity: 1)
     }
 
-    public func mapAsync(mode: KZMapMode, offset: Int, size: Int, callback: WGPUBufferMapCallback, userData: UnsafeMutableRawPointer?) {
+    public func mapAsync(mode: KZMapMode, offset: Int, size: Int, callback: WGPUBufferMapCallback = { _, _ in }, userData: UnsafeMutableRawPointer? = nil) {
         return wgpuBufferMapAsync(c, mode.c.rawValue, offset, size, callback, userData)
     }
 

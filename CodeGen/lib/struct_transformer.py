@@ -42,6 +42,17 @@ class StructTransformer(Transformer):
             "UnsafeMutableRawPointer?": self.gen_raw_pointer_conversion
         }
 
+        # Default values to use for parameters based on their name. Has
+        # precendence over `parameter_type_default_values`.
+        self.parameter_name_default_values = {
+            "userData": "nil"
+        }
+
+        # Default values to use for parameters based on their type.
+        self.parameter_type_default_values = {
+            "WGPUBufferMapCallback": "{ _, _ in }"
+        }
+
     def visit(self, decl) -> Optional[Struct]:
         if type(decl) == c_ast.Typedef and decl.name.startswith("WGPU"):
             methods = []
@@ -206,13 +217,21 @@ class StructTransformer(Transformer):
 
             param_name = swiftify_identifier(param.name)
 
+            # Choose a sensible default value if the parameter has one.
+            default_value = None
+            if param_name in self.parameter_name_default_values:
+                default_value = self.parameter_name_default_values[param_name]
+            elif type_ in self.parameter_type_default_values:
+                default_value = self.parameter_type_default_values[type_]
+            default_value = f" = {default_value}" if default_value else ""
+
             # Follow the Swift convention of omitting parameter labels if
             # the last word of the method name matches the label.
             if is_first and param_name == method_name_words[-1]:
                 param_name = f"_ {param_name}"
             is_first = False
 
-            params.append(f"{param_name}: {type_}")
+            params.append(f"{param_name}: {type_}{default_value}")
 
         params_str = ", ".join(params)
 
