@@ -10,7 +10,9 @@ let package = Package(
             targets: [ "Kinzoku" ]
         )
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/thepotatoking55/SwiftGLFW.git", branch: "main")
+    ],
     targets: [
         .target(
             name: "WgpuHeaders"
@@ -24,7 +26,7 @@ let package = Package(
         ),
         .testTarget(
             name: "KinzokuTests",
-            dependencies: [ "Kinzoku" ],
+            dependencies: [ "Kinzoku", "SwiftGLFW" ],
             resources: [
                 .process("Resources")
             ]

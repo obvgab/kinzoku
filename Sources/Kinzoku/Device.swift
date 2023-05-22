@@ -1,36 +1,36 @@
 public class KZDevice {
     public var c: WGPUDevice
     //var pointers: ()
-    
+
     init(_ c: WGPUDevice) {
         self.c = c
     }
-    
+
     /*
     public func createBindGroup(
-    
+
     ) -> KZBindGroup {
-        
+
     }
     */
-    
-    public func enumerateFeatures() -> [KZFeature] {
+
+    public func enumerateFeatures() -> [KZFeatureName] {
         let feature: UnsafeMutablePointer<WGPUFeatureName>? = nil
         let count = wgpuDeviceEnumerateFeatures(c, feature)
-        
-        guard let buffer = feature?.withMemoryRebound(to: KZFeature.self, capacity: count, { pointer in
+
+        guard let buffer = feature?.withMemoryRebound(to: KZFeatureName.self, capacity: count, { pointer in
             UnsafeBufferPointer(start: pointer, count: count)
         }) else { return [] }
-        
+
         return Array(buffer)
     }
-    
+
     public func createShaderModule(
         source: KZShaderSource
     ) -> KZShaderModule {
         return KZShaderModule(c: wgpuDeviceCreateShaderModule(c, &source.c))
     }
-    
+
     public func createBindGroup(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = "",
@@ -46,11 +46,11 @@ public class KZDevice {
                 entries: getCopiedPointer(entries)
             )
             defer { descriptor.entries.deallocate() }
-            
+
             return KZBindGroup(c: wgpuDeviceCreateBindGroup(c, &descriptor))
         }
     }
-    
+
     public func createBuffer(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = "",
@@ -60,7 +60,7 @@ public class KZDevice {
     ) -> KZBuffer {
         return label.withCString { label in
             var usageRaw: UInt32 = 0x00000000; usage.forEach { flag in usageRaw |= flag.rawValue }
-            
+
             var descriptor = WGPUBufferDescriptor(
                 nextInChain: chain,
                 label: label,
@@ -68,11 +68,11 @@ public class KZDevice {
                 size: size,
                 mappedAtCreation: mapped
             )
-            
+
             return KZBuffer(wgpuDeviceCreateBuffer(c, &descriptor))
         }
     }
-    
+
     public func createComputePipeline(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         stageChain: UnsafePointer<WGPUChainedStruct>? = nil,
@@ -97,12 +97,12 @@ public class KZDevice {
                     )
                 )
                 defer { descriptor.compute.constants.deallocate() }
-                
+
                 return KZComputePipeline(c: wgpuDeviceCreateComputePipeline(c, &descriptor))
             }
         }
     }
-    
+
     public func createRenderPipeline(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = "",
@@ -113,9 +113,9 @@ public class KZDevice {
         // MultiSampleState
         // FragmentState
     ) {
-        
+
     }
-    
+
     public func createCommandEncoder(
         chain: UnsafePointer<WGPUChainedStruct>? = nil,
         label: String = ""
@@ -125,25 +125,16 @@ public class KZDevice {
                 nextInChain: chain,
                 label: label
             )
-            
+
             return KZCommandEncoder(wgpuDeviceCreateCommandEncoder(c, &descriptor))
         }
     }
-    
+
     public func getQueue() -> KZQueue {
         return KZQueue(wgpuDeviceGetQueue(c))
     }
-    
+
     public func poll(wait: Bool = false) { // Eventually fully implement submissionIndex
         _ = wgpuDevicePoll(c, wait, nil)
     }
-    
-    //deinit {}
-}
-
-public enum KZDeviceRequestStatus: UInt32 {
-    case success = 0x00000000
-    case error = 0x00000001
-    case unknown = 0x00000002
-    case force32 = 0x7FFFFFFF
 }
