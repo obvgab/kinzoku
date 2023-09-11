@@ -9,6 +9,8 @@ let package = Package(
         .library(
             name: "Kinzoku",
             targets: ["Kinzoku"]),
+        .plugin(name: "NagaPlugin",
+                targets: ["NagaPlugin"])
     ],
     targets: [
         .target(name: "Kinzoku"),
