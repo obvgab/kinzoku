@@ -1,3 +1,0 @@
-[submodule "naga"]
-	path = External/naga
-	url = git@github.com:gfx-rs/naga.git
