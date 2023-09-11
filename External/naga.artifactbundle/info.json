@@ -1,0 +1,15 @@
+{
+    "schemaVersion": "1.0",
+    "artifacts": {
+        "naga": {
+            "version": "0.13.0",
+            "type": "executable",
+            "variants": [
+                {
+                    "path": "aarch64-darwin-0.13.0/bin/naga",
+                    "supportedTriples": ["aarch64-apple-darwin"]
+                }
+            ]
+        }
+    }
+}
