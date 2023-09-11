@@ -40,13 +40,14 @@ extension NagaPlugin: XcodeBuildToolPlugin {
         }
         
         return try sourceShaders.map {
-            Command.buildCommand( // Either make both .metal and .spv, or figure out our platform target
+            Command.prebuildCommand( // Either make both .metal and .spv, or figure out our platform target
                 displayName: "Converting WGSL to Metal", // Make dynamic
                 executable: try context.tool(named: "naga").path,
                 arguments: [
                     "Shaders/\($0)", // oh please make this dynamic
                     "Shaders/\($0.replacingOccurrences(of: ".wgsl", with: ".metal"))" // im beggin for this to be dynamic
-                ]
+                ],
+                outputFilesDirectory: context.xcodeProject.directory
             )
         }
     }
