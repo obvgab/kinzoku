@@ -5,7 +5,7 @@ import Foundation
 struct NagaPlugin: BuildToolPlugin {
     func createBuildCommands(context: PluginContext, target: Target) async throws -> [Command] {
         guard let sourceShaders = FileManager.default
-            .enumerator(atPath: context.pluginWorkDirectory.appending(subpath: "Shaders").string)? // Allow to be overriden?
+            .enumerator(atPath: target.directory.appending(subpath: "Shaders").string)? // Allow to be overriden?
             .allObjects
             .compactMap({ $0 as? String })
         else {
@@ -32,7 +32,7 @@ import XcodeProjectPlugin
 extension NagaPlugin: XcodeBuildToolPlugin {
     func createBuildCommands(context: XcodePluginContext, target: XcodeTarget) throws -> [Command] {
         guard let sourceShaders = FileManager.default
-            .enumerator(atPath: context.pluginWorkDirectory.appending(subpath: "Shaders").string)? // Allow to be overriden?
+            .enumerator(atPath: context.xcodeProject.directory.appending(subpath: "Shaders").string)? // Allow to be overriden?
             .allObjects
             .compactMap({ $0 as? String })
         else {
