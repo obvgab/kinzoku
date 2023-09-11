@@ -44,8 +44,8 @@ extension NagaPlugin: XcodeBuildToolPlugin {
                 displayName: "Converting WGSL to Metal", // Make dynamic
                 executable: try context.tool(named: "naga").path,
                 arguments: [
-                    "Shader/\($0)", // oh please make this dynamic
-                    "Shader/\($0.replacingOccurrences(of: ".wgsl", with: ".metal"))" // im beggin for this to be dynamic
+                    "Shaders/\($0)", // oh please make this dynamic
+                    "Shaders/\($0.replacingOccurrences(of: ".wgsl", with: ".metal"))" // im beggin for this to be dynamic
                 ]
             )
         }
