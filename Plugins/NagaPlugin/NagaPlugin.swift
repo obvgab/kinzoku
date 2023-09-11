@@ -47,7 +47,7 @@ extension NagaPlugin: XcodeBuildToolPlugin {
                     "Shaders/\($0)", // oh please make this dynamic
                     "Shaders/\($0.replacingOccurrences(of: ".wgsl", with: ".metal"))" // im beggin for this to be dynamic
                 ],
-                outputFilesDirectory: context.xcodeProject.directory
+                outputFilesDirectory: context.pluginWorkDirectory // ???
             )
         }
     }
