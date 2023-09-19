@@ -3,11 +3,15 @@ import PackagePlugin
 
 @main
 struct NagaPlugin: BuildToolPlugin {
-  private func createBuildCommands(inputFiles: [Path], tool: PluginContext.Tool) -> [Command] {
+  private func createBuildCommands(
+    inputFiles: [Path],
+    workingDirectory: Path,
+    tool: PluginContext.Tool
+  ) -> [Command] {
     if inputFiles.isEmpty { return [] }
     let commandInfo: [(output: Path, files: [String])] = inputFiles.map { wgsl in
-      (wgsl.removingLastComponent(),
-       [wgsl.string, wgsl.string.replacingOccurrences(of: ".wgsl", with: ".metal")])
+      (workingDirectory.appending("Output"),
+       [wgsl.string, workingDirectory.appending("Output").string + wgsl.stem + ".metal"]) // Make dynamic for SPIR-V
     }
     
     return commandInfo.map { info in
@@ -23,6 +27,7 @@ struct NagaPlugin: BuildToolPlugin {
     guard let sourceTarget = target.sourceModule else { return [] }
     return createBuildCommands(
       inputFiles: sourceTarget.sourceFiles(withSuffix: "wgsl").map(\.path),
+      workingDirectory: context.pluginWorkDirectory,
       tool: try context.tool(named: "naga")
     )
   }
@@ -34,6 +39,7 @@ extension NagaPlugin: XcodeBuildToolPlugin {
   func createBuildCommands(context: XcodePluginContext, target: XcodeTarget) throws -> [Command] {
     return createBuildCommands(
       inputFiles: target.inputFiles.filter { $0.path.extension == "wgsl" }.map(\.path),
+      workingDirectory: context.pluginWorkDirectory,
       tool: try context.tool(named: "naga")
     )
   }
