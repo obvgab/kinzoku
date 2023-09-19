@@ -11,7 +11,7 @@ struct NagaPlugin: BuildToolPlugin {
     if inputFiles.isEmpty { return [] }
     let commandInfo: [(output: Path, files: [String])] = inputFiles.map { wgsl in
       (workingDirectory.appending("Output"),
-       [wgsl.string, workingDirectory.appending("Output").string + wgsl.stem + ".metal"]) // Make dynamic for SPIR-V
+       [wgsl.string, workingDirectory.appending("Output").appending(wgsl.stem + ".metal").string]) // Make dynamic for SPIR-V
     }
     
     return commandInfo.map { info in
