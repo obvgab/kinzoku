@@ -42,7 +42,7 @@ extension NagaPlugin: XcodeBuildToolPlugin {
   func createBuildCommands(context: XcodePluginContext, target: XcodeTarget) throws -> [Command] {
     return createBuildCommands(
       inputFiles: target.inputFiles.filter { $0.path.extension == "wgsl" }.map(\.path),
-      workingDirectory: context.xcodeProject.directory,
+      workingDirectory: context.pluginWorkDirectory,
       tool: try context.tool(named: "naga")
     )
   }
