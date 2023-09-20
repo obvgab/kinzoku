@@ -13,11 +13,14 @@ struct NagaPlugin: BuildToolPlugin {
     try? FileManager.default.createDirectory(atPath: outputShaders.string,
                 withIntermediateDirectories: true)
     
-    let files = inputFiles.map { wgsl in
-       [wgsl.string, workingDirectory.appending("Shaders").appending(wgsl.stem + ".metal").string] // Make dynamic for SPIR-V
+    let metalFiles = inputFiles.map { wgsl in
+      [wgsl.string, workingDirectory.appending("Shaders").appending(wgsl.stem + ".metal").string]
+    }
+    let spvFiles = inputFiles.map { wgsl in
+      [wgsl.string, workingDirectory.appending("Shaders").appending(wgsl.stem + ".spv").string]
     }
     
-    return files.map { files in
+    return (metalFiles + spvFiles).map { files in
         .prebuildCommand(displayName: "Naga [\(files[0]) -> \(files[1])]",
                          executable: tool.path,
                          arguments: files,
