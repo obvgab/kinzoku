@@ -9,16 +9,19 @@ struct NagaPlugin: BuildToolPlugin {
     tool: PluginContext.Tool
   ) -> [Command] {
     if inputFiles.isEmpty { return [] }
-    let commandInfo: [(output: Path, files: [String])] = inputFiles.map { wgsl in
-      (workingDirectory.appending("Output"),
-       [wgsl.string, workingDirectory.appending("Output").appending(wgsl.stem + ".metal").string]) // Make dynamic for SPIR-V
+    let outputShaders = workingDirectory.appending("Shaders")
+    try? FileManager.default.createDirectory(atPath: outputShaders.string,
+                withIntermediateDirectories: true)
+    
+    let files = inputFiles.map { wgsl in
+       [wgsl.string, workingDirectory.appending("Shaders").appending(wgsl.stem + ".metal").string] // Make dynamic for SPIR-V
     }
     
-    return commandInfo.map { info in
-        .prebuildCommand(displayName: "Naga [\(info.files[0]) -> \(info.files[1])]",
+    return files.map { files in
+        .prebuildCommand(displayName: "Naga [\(files[0]) -> \(files[1])]",
                          executable: tool.path,
-                         arguments: info.files,
-                         outputFilesDirectory: info.output
+                         arguments: files,
+                         outputFilesDirectory: outputShaders
         )
     }
   }
