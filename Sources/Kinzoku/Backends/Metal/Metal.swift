@@ -21,6 +21,11 @@ public class MBEAdapter: KZAdapter, KZDescribable {
     }
     
     public struct Descriptor {
+        public init(forceFallback: Bool, powerPreference: PowerPreference) {
+            self.forceFallback = forceFallback
+            self.powerPreference = powerPreference
+        }
+        
         var forceFallback: Bool = false
         var powerPreference: PowerPreference = .highPerformance
         
@@ -81,7 +86,7 @@ public class MBEDevice: KZDevice {
     }
     
     public struct Descriptor {
-        
+        public init() {}
     }
 }
 
@@ -107,6 +112,10 @@ public class MBEShaderModule: KZDescribable {
     }
     
     public struct Descriptor {
+        public init(code: String) {
+            self.code = code
+        }
+        
         var code: String
     }
 }
@@ -119,12 +128,23 @@ public class MBERenderPipeline: KZDescribable {
     }
     
     public struct Descriptor {
+        public init(label: String, vertex: Vertex, fragment: Fragment) {
+            self.label = label
+            self.vertex = vertex
+            self.fragment = fragment
+        }
+        
         var label: String
         // layout?
         var vertex: Vertex
         var fragment: Fragment // Optional?
         
         public struct Vertex {
+            public init(entryPoint: String, module: MBEShaderModule) {
+                self.entryPoint = entryPoint
+                self.module = module
+            }
+            
             var entryPoint: String
             var module: MBEShaderModule
         }
@@ -133,10 +153,16 @@ public class MBERenderPipeline: KZDescribable {
             var entryPoint: String
             var module: MBEShaderModule
             var targets: [ColorTarget]
+            
+            public init(entryPoint: String, module: MBEShaderModule, targets: [ColorTarget]) {
+                self.entryPoint = entryPoint
+                self.module = module
+                self.targets = targets
+            }
         }
         
         public struct ColorTarget {
-            
+            public init() {}
         }
     }
 }
@@ -186,7 +212,7 @@ public class MBERenderPassEncoder: KZRenderPassEncoder {
     }
     
     public struct Descriptor {
-        
+        public init() {}
     }
 }
 
@@ -200,6 +226,10 @@ public class MBECommandBuffer: KZCommandBuffer {
     }
     
     public struct Descriptor {
+        public init(label: String) {
+            self.label = label
+        }
+        
         var label: String
     }
 }
