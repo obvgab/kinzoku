@@ -15,14 +15,14 @@ import Metal
 // Instance might be better as a unified struct, since most backends will just return the adapter object regardless
 // This would also make it easier to write agnostic code, since you would just invoke KZInstance as a struct instead
 // of it being a protocol.
-struct MBEInstance: KZInstance {
+public struct MBEInstance: KZInstance {
     func requestAdapter(_ options: MBEAdapter.Descriptor? = MBEAdapter.Descriptor()) async -> MBEAdapter {
         // TODO: Implement selection with fallback and power preference for intel machines
         return MBEAdapter()
     }
 }
 
-class MBEAdapter: KZAdapter, KZDescribable {    
+public class MBEAdapter: KZAdapter, KZDescribable {
     func requestDevice(_ descriptor: MBEDevice.Descriptor?) async -> MBEDevice {
         guard let device = MTLCreateSystemDefaultDevice() else { fatalError("Kinzoku could not find a Metal device.") }
         guard let queue = device.makeCommandQueue() else { fatalError("Kinzoku couldn't acquire a command queue from the Metal device.") }
@@ -41,10 +41,10 @@ class MBEAdapter: KZAdapter, KZDescribable {
     }
 }
 
-class MBEDevice: KZDevice {
-    var queue: MBEQueue
-    var inner: MTLDevice
+public class MBEDevice: KZDevice {
     var label: String
+    var queue: MBEQueue
+    internal var inner: MTLDevice
     
     init(queue: MBEQueue, inner: MTLDevice, label: String) {
         self.queue = queue
@@ -95,8 +95,8 @@ class MBEDevice: KZDevice {
     }
 }
 
-class MBEQueue: KZQueue {
-    var inner: MTLCommandQueue
+public class MBEQueue: KZQueue {
+    internal var inner: MTLCommandQueue
     
     init(inner: MTLCommandQueue) {
         self.inner = inner
@@ -109,8 +109,8 @@ class MBEQueue: KZQueue {
     }
 }
 
-class MBEShaderModule: KZDescribable {
-    var inner: MTLLibrary
+public class MBEShaderModule: KZDescribable {
+    internal var inner: MTLLibrary
     
     init(inner: MTLLibrary) {
         self.inner = inner
@@ -121,8 +121,8 @@ class MBEShaderModule: KZDescribable {
     }
 }
 
-class MBERenderPipeline: KZDescribable {
-    var inner: MTLRenderPipelineState
+public class MBERenderPipeline: KZDescribable {
+    internal var inner: MTLRenderPipelineState
     
     init(inner: MTLRenderPipelineState) {
         self.inner = inner
@@ -151,8 +151,8 @@ class MBERenderPipeline: KZDescribable {
     }
 }
 
-class MBECommandEncoder: KZCommandEncoder {
-    var inner: MTLCommandEncoder?
+public class MBECommandEncoder: KZCommandEncoder {
+    internal var inner: MTLCommandEncoder?
     var buffer: MTLCommandBuffer
     
     init(inner: MTLCommandEncoder? = nil, buffer: MTLCommandBuffer) {
@@ -176,8 +176,8 @@ class MBECommandEncoder: KZCommandEncoder {
     struct Descriptor { var label: String }
 }
 
-class MBERenderPassEncoder: KZRenderPassEncoder {
-    var inner: MTLRenderCommandEncoder
+public class MBERenderPassEncoder: KZRenderPassEncoder {
+    internal var inner: MTLRenderCommandEncoder
     
     init(inner: MTLRenderCommandEncoder) {
         self.inner = inner
@@ -200,9 +200,9 @@ class MBERenderPassEncoder: KZRenderPassEncoder {
     }
 }
 
-class MBECommandBuffer: KZCommandBuffer {
+public class MBECommandBuffer: KZCommandBuffer {
     var label: String
-    var inner: MTLCommandBuffer
+    internal var inner: MTLCommandBuffer
     
     init(label: String, inner: MTLCommandBuffer) {
         self.label = label
