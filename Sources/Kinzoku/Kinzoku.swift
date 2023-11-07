@@ -1,110 +1,62 @@
-#if canImport(Metal)
-import Metal
-#else
-import CVulkan
-#endif
+// High-Level API from W3's Standards
 
-// Just makin some generics, seeing how we can structure this in Swift from W3's API docs
+/// Contains a parseable description that provides necessary or
+/// supplemental information about a  object.
+protocol KZDescribable { associatedtype Descriptor }
+/// Inherets a label for identification.
+protocol KZLabeled { var label: String { get } }
 
-protocol Describable { associatedtype Descriptor }
-protocol Configurable { associatedtype Options }
-
-protocol GPU {
-    // Switch OpaquePointer to AdapterOptions later
-    associatedtype GPUAdapter: Adapter & Configurable
-    func requestAdapter(_ options: GPUAdapter.Options?) async -> GPUAdapter
-}
-protocol GPUObjectBase {
-    var label: String { get }
+/// Effectively the Graphics Processing Unit object, used for providing an adapter
+/// to the client for creating graphical contexts. The entroy point for Kinzoku.
+protocol KZInstance {
+    /// Associated Adapter for the given platform. This should changed
+    /// based on the operating system being compiled.
+    associatedtype Adapter: KZAdapter
+    /// Request an adapter from the  for creating graphical contexts.
+    func requestAdapter(_ options: Adapter.Descriptor?) async -> Adapter
 }
 
-protocol Adapter {
-    associatedtype GPUSupportedLimit
-    associatedtype GPUSupportedFeatures
-    var limits: GPUSupportedLimit { get }
-    var features: GPUSupportedFeatures { get }
-    
-    var isFallback: Bool { get }
-    
-    associatedtype GPUDevice: Device & Describable
-    associatedtype GPUAdapterInfo
-    func requestDevice(_ descriptor: GPUDevice.Descriptor?) async -> GPUDevice
-    func requestAdapterInfo() async -> GPUAdapterInfo
+protocol KZAdapter: KZDescribable {
+    associatedtype Device: KZDevice
+    func requestDevice(_ descriptor: Device.Descriptor?) async -> Device
 }
 
-protocol Device: GPUObjectBase {
-    associatedtype GPUSupportedLimit
-    associatedtype GPUSupportedFeatures
-    var limits: GPUSupportedLimit { get }
-    var features: GPUSupportedFeatures { get }
+protocol KZDevice: KZLabeled, KZDescribable {
+    associatedtype Queue: KZQueue
+    var queue: Queue { get }
     
-    associatedtype GPUQueue
-    var queue: GPUQueue { get }
+    associatedtype ShaderModule: KZDescribable
+    associatedtype RenderPipeline: KZDescribable
+    func createShaderModule(_ descriptor: ShaderModule.Descriptor) -> ShaderModule
+    func createRenderPipeline(_ descriptor: RenderPipeline.Descriptor) -> RenderPipeline
+    func createRenderPipeline(_ descriptor: RenderPipeline.Descriptor) async -> RenderPipeline
     
-    associatedtype GPUBuffer: Describable
-    associatedtype GPUTexture: Describable
-    associatedtype GPUSampler: Describable
-    associatedtype GPUExternalTexture: Describable
-    func createBuffer(_ descriptor: GPUBuffer.Descriptor) -> GPUBuffer
-    func createTexture(_ descriptor: GPUTexture.Descriptor) -> GPUTexture
-    func createSampler(_ descriptor: GPUSampler.Descriptor?) -> GPUSampler
-    func importExternalTexture(_ descriptor: GPUExternalTexture.Descriptor) -> GPUExternalTexture
-    
-    associatedtype GPUBindGroup: Describable
-    associatedtype GPUPipelineLayout: Describable
-    associatedtype GPUBindGroupLayout: Describable
-    func createBindGroup(_ descriptor: GPUBindGroup.Descriptor) -> GPUBindGroup
-    func createPipelineLayout(_ descriptor: GPUPipelineLayout.Descriptor) -> GPUPipelineLayout
-    func createBindGroupLayout(_ descriptor: GPUBindGroupLayout.Descriptor) -> GPUBindGroupLayout
-    
-    associatedtype GPUShaderModule: Describable
-    associatedtype GPUComputePipeline: Describable
-    associatedtype GPURenderPipeline: Describable
-    func createShaderModule(_ descriptor: GPUShaderModule.Descriptor) -> GPUShaderModule
-    func createComputePipeline(_ descriptor: GPUComputePipeline.Descriptor) -> GPUComputePipeline
-    func createRenderPipeline(_ descriptor: GPURenderPipeline.Descriptor) -> GPURenderPipeline
-    func createComputePipeline(_ descriptor: GPUComputePipeline.Descriptor) async -> GPUComputePipeline
-    func createRenderPipeline(_ descriptor: GPURenderPipeline.Descriptor) async -> GPURenderPipeline
-    
-    associatedtype GPUCommandEncoder: Describable
-    associatedtype GPURenderBundleEncoder: Describable
-    func createCommandEncoder(_ descriptor: GPUCommandEncoder.Descriptor?) -> GPUCommandEncoder
-    func createRenderBundleEncoder(_ descriptor: GPURenderBundleEncoder.Descriptor) -> GPURenderBundleEncoder
-    
-    associatedtype GPUQuerySet: Describable
-    func createQuerySet(_ descriptor: GPUQuerySet.Descriptor) -> GPUQuerySet
+    associatedtype CommandEncoder: KZCommandEncoder
+    func createCommandEncoder(_ descriptor: CommandEncoder.Descriptor?) -> CommandEncoder
 }
 
-protocol Buffer: GPUObjectBase {
-    var size: UInt64 { get }
-    var usage: [GPUFlags] { get }
+protocol KZCommandEncoder: KZDescribable {
+    associatedtype RenderPassEncoder: KZRenderPassEncoder
+    func beginRenderPass(_ descriptor: RenderPassEncoder.Descriptor) -> RenderPassEncoder
     
-    var mapState: BufferMapState { get }
-    
-    associatedtype ArrayBuffer // Not sure yet what this should be
-    func map(mode: [MapModeFlags], offset: UInt64?, size: UInt64?) async
-    func getMappedRange(offset: UInt64?, size: UInt64?) -> ArrayBuffer
-    func unmap()
+    associatedtype CommandBuffer: KZCommandBuffer
+    func finish(_ descriptor: CommandBuffer.Descriptor?) -> CommandBuffer
 }
 
-enum BufferMapState {
-    case unmapped
-    case pending
-    case mapped
+protocol KZRenderPassEncoder: KZRenderCommandsMixin, KZDescribable {
+    func end()
 }
-enum MapModeFlags {
-    case read
-    case write
+
+protocol KZRenderCommandsMixin {
+    associatedtype RenderPipeline: KZDescribable
+    func setPipeline(_ pipeline: RenderPipeline)
+    
+    func draw(_ vertices: UInt32, _ instances: UInt32, _ firstVertex: UInt32, _ firstInstance: UInt32)
 }
-enum GPUFlags {
-    case mapRead
-    case mapWrite
-    case copySource
-    case copyDestination
-    case index
-    case vertex
-    case uniform
-    case storage
-    case indirect
-    case queryResolve
+
+protocol KZCommandBuffer: KZLabeled, KZDescribable {}
+
+protocol KZQueue {
+    associatedtype CommandBuffer: KZCommandBuffer
+    func submit(_ commandBuffers: [CommandBuffer]) // We can associated type this if we want to force KZCommandEncoder to be linked
 }
