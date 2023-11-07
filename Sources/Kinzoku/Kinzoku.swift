@@ -15,6 +15,9 @@ public struct KZInstance {
     public typealias Adapter = MBEAdapter
     #endif
     
+    /// Returns a new KZInstance, which is adapted to a platform.
+    public init() {}
+    
     /// Request an adapter from the  for creating graphical contexts.
     public func requestAdapter(_ options: Adapter.Descriptor?) async -> Adapter {
         // IGNORE DESCRIPTOR FOR NOW
