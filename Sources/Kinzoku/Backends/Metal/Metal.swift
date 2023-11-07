@@ -181,7 +181,12 @@ public class MBECommandEncoder: KZCommandEncoder {
     }
     
     public func beginRenderPass(_ descriptor: MBERenderPassEncoder.Descriptor) -> MBERenderPassEncoder {
-        var metalDescriptor = MTLRenderPassDescriptor() // TODO: Change this, I'm beggin you
+        var metalDescriptor = MTLRenderPassDescriptor() // TODO: Change this, I'm beggin you, It's all hardcoded!!
+        metalDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0.05, blue: 0, alpha: 1)
+        metalDescriptor.colorAttachments[0].storeAction = MTLStoreAction.store
+        metalDescriptor.colorAttachments[0].loadAction = MTLLoadAction.clear
+        metalDescriptor.colorAttachments[0].texture = descriptor.texture
+        
         guard let encoder = buffer.makeRenderCommandEncoder(descriptor: metalDescriptor) else { fatalError("Kinzoku could not establish a render context.") }
         
         inner = encoder
@@ -208,7 +213,11 @@ public class MBERenderPassEncoder: KZRenderPassEncoder {
     }
     
     public struct Descriptor {
-        public init() {}
+        public init(texture: MTLTexture) {
+            self.texture = texture
+        }
+        
+        var texture: MTLTexture
     }
 }
 
