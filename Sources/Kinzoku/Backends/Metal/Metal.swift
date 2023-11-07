@@ -12,29 +12,19 @@ import Metal
 
 // Descriptors should probably be backend-agnostic fs.
 
-// Instance might be better as a unified struct, since most backends will just return the adapter object regardless
-// This would also make it easier to write agnostic code, since you would just invoke KZInstance as a struct instead
-// of it being a protocol.
-public struct MBEInstance: KZInstance {
-    func requestAdapter(_ options: MBEAdapter.Descriptor? = MBEAdapter.Descriptor()) async -> MBEAdapter {
-        // TODO: Implement selection with fallback and power preference for intel machines
-        return MBEAdapter()
-    }
-}
-
 public class MBEAdapter: KZAdapter, KZDescribable {
-    func requestDevice(_ descriptor: MBEDevice.Descriptor?) async -> MBEDevice {
+    public func requestDevice(_ descriptor: MBEDevice.Descriptor?) async -> MBEDevice {
         guard let device = MTLCreateSystemDefaultDevice() else { fatalError("Kinzoku could not find a Metal device.") }
         guard let queue = device.makeCommandQueue() else { fatalError("Kinzoku couldn't acquire a command queue from the Metal device.") }
         
         return MBEDevice(queue: MBEQueue(inner: queue), inner: device, label: "Kinzoku Metal Device")
     }
     
-    struct Descriptor {
+    public struct Descriptor {
         var forceFallback: Bool = false
         var powerPreference: PowerPreference = .highPerformance
         
-        enum PowerPreference {
+        public enum PowerPreference {
             case lowPower
             case highPerformance
         }
@@ -46,13 +36,13 @@ public class MBEDevice: KZDevice {
     var queue: MBEQueue
     internal var inner: MTLDevice
     
-    init(queue: MBEQueue, inner: MTLDevice, label: String) {
+    public init(queue: MBEQueue, inner: MTLDevice, label: String) {
         self.queue = queue
         self.inner = inner
         self.label = label
     }
     
-    func createShaderModule(_ descriptor: MBEShaderModule.Descriptor) -> MBEShaderModule {
+    public func createShaderModule(_ descriptor: MBEShaderModule.Descriptor) -> MBEShaderModule {
         // Hard code this for now, should probably have an option to dynamically get a .sprv / .metal file from name
         var metalOptions = MTLCompileOptions()
         // Adjust options here??
@@ -62,11 +52,11 @@ public class MBEDevice: KZDevice {
         return MBEShaderModule(inner: library)
     }
     
-    func createRenderPipeline(_ descriptor: MBERenderPipeline.Descriptor) -> MBERenderPipeline {
+    public func createRenderPipeline(_ descriptor: MBERenderPipeline.Descriptor) -> MBERenderPipeline {
         fatalError("USE ASYNC FOR NOW")
     }
     
-    func createRenderPipeline(_ descriptor: MBERenderPipeline.Descriptor) async -> MBERenderPipeline {
+    public func createRenderPipeline(_ descriptor: MBERenderPipeline.Descriptor) async -> MBERenderPipeline {
         // Hardcode for testing
         var metalDescriptor = MTLRenderPipelineDescriptor()
         metalDescriptor.label = descriptor.label
@@ -84,13 +74,13 @@ public class MBEDevice: KZDevice {
         return MBERenderPipeline(inner: pipeline)
     }
     
-    func createCommandEncoder(_ descriptor: MBECommandEncoder.Descriptor?) -> MBECommandEncoder {
+    public func createCommandEncoder(_ descriptor: MBECommandEncoder.Descriptor?) -> MBECommandEncoder {
         guard let buffer = queue.inner.makeCommandBuffer() else { fatalError("Kinzoku could not establish a command context.") }
         
         return MBECommandEncoder(buffer: buffer)
     }
     
-    struct Descriptor {
+    public struct Descriptor {
         
     }
 }
@@ -98,11 +88,11 @@ public class MBEDevice: KZDevice {
 public class MBEQueue: KZQueue {
     internal var inner: MTLCommandQueue
     
-    init(inner: MTLCommandQueue) {
+    public init(inner: MTLCommandQueue) {
         self.inner = inner
     }
     
-    func submit(_ commandBuffers: [MBECommandBuffer]) { // Semantically backwards compared to Metal
+    public func submit(_ commandBuffers: [MBECommandBuffer]) { // Semantically backwards compared to Metal
         for commandBuffer in commandBuffers {
             commandBuffer.inner.commit()
         }
@@ -112,11 +102,11 @@ public class MBEQueue: KZQueue {
 public class MBEShaderModule: KZDescribable {
     internal var inner: MTLLibrary
     
-    init(inner: MTLLibrary) {
+    public init(inner: MTLLibrary) {
         self.inner = inner
     }
     
-    struct Descriptor {
+    public struct Descriptor {
         var code: String
     }
 }
@@ -124,28 +114,28 @@ public class MBEShaderModule: KZDescribable {
 public class MBERenderPipeline: KZDescribable {
     internal var inner: MTLRenderPipelineState
     
-    init(inner: MTLRenderPipelineState) {
+    public init(inner: MTLRenderPipelineState) {
         self.inner = inner
     }
     
-    struct Descriptor {
+    public struct Descriptor {
         var label: String
         // layout?
         var vertex: Vertex
         var fragment: Fragment // Optional?
         
-        struct Vertex {
+        public struct Vertex {
             var entryPoint: String
             var module: MBEShaderModule
         }
         
-        struct Fragment {
+        public struct Fragment {
             var entryPoint: String
             var module: MBEShaderModule
             var targets: [ColorTarget]
         }
         
-        struct ColorTarget {
+        public struct ColorTarget {
             
         }
     }
@@ -155,16 +145,16 @@ public class MBECommandEncoder: KZCommandEncoder {
     internal var inner: MTLCommandEncoder?
     var buffer: MTLCommandBuffer
     
-    init(inner: MTLCommandEncoder? = nil, buffer: MTLCommandBuffer) {
+    public init(inner: MTLCommandEncoder? = nil, buffer: MTLCommandBuffer) {
         self.inner = inner
         self.buffer = buffer
     }
     
-    func finish(_ descriptor: MBECommandBuffer.Descriptor? = nil) -> MBECommandBuffer {
+    public func finish(_ descriptor: MBECommandBuffer.Descriptor? = nil) -> MBECommandBuffer {
         return MBECommandBuffer(label: descriptor?.label ?? "TEST", inner: buffer)
     }
     
-    func beginRenderPass(_ descriptor: MBERenderPassEncoder.Descriptor) -> MBERenderPassEncoder {
+    public func beginRenderPass(_ descriptor: MBERenderPassEncoder.Descriptor) -> MBERenderPassEncoder {
         var metalDescriptor = MTLRenderPassDescriptor() // TODO: Change this, I'm beggin you
         guard let encoder = buffer.makeRenderCommandEncoder(descriptor: metalDescriptor) else { fatalError("Kinzoku could not establish a render context.") }
         
@@ -173,29 +163,29 @@ public class MBECommandEncoder: KZCommandEncoder {
         return MBERenderPassEncoder(inner: encoder)
     }
     
-    struct Descriptor { var label: String }
+    public struct Descriptor { var label: String }
 }
 
 public class MBERenderPassEncoder: KZRenderPassEncoder {
     internal var inner: MTLRenderCommandEncoder
     
-    init(inner: MTLRenderCommandEncoder) {
+    public init(inner: MTLRenderCommandEncoder) {
         self.inner = inner
     }
     
-    func setPipeline(_ pipeline: MBERenderPipeline) {
+    public func setPipeline(_ pipeline: MBERenderPipeline) {
         
     }
     
-    func end() {
+    public func end() {
         
     }
 
-    func draw(_ vertices: UInt32, _ instances: UInt32, _ firstVertex: UInt32, _ firstInstance: UInt32) {
+    public func draw(_ vertices: UInt32, _ instances: UInt32, _ firstVertex: UInt32, _ firstInstance: UInt32) {
         
     }
     
-    struct Descriptor {
+    public struct Descriptor {
         
     }
 }
@@ -204,12 +194,12 @@ public class MBECommandBuffer: KZCommandBuffer {
     var label: String
     internal var inner: MTLCommandBuffer
     
-    init(label: String, inner: MTLCommandBuffer) {
+    public init(label: String, inner: MTLCommandBuffer) {
         self.label = label
         self.inner = inner
     }
     
-    struct Descriptor {
+    public struct Descriptor {
         var label: String
     }
 }

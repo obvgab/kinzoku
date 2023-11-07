@@ -8,12 +8,18 @@ protocol KZLabeled { var label: String { get } }
 
 /// Effectively the Graphics Processing Unit object, used for providing an adapter
 /// to the client for creating graphical contexts. The entroy point for Kinzoku.
-protocol KZInstance {
+public struct KZInstance {
+    #if canImport(Metal)
     /// Associated Adapter for the given platform. This should changed
     /// based on the operating system being compiled.
-    associatedtype Adapter: KZAdapter
+    public typealias Adapter = MBEAdapter
+    #endif
+    
     /// Request an adapter from the  for creating graphical contexts.
-    func requestAdapter(_ options: Adapter.Descriptor?) async -> Adapter
+    public func requestAdapter(_ options: Adapter.Descriptor?) async -> Adapter {
+        // IGNORE DESCRIPTOR FOR NOW
+        return Adapter()
+    }
 }
 
 protocol KZAdapter: KZDescribable {
