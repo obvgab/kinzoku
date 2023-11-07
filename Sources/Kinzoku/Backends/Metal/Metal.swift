@@ -37,8 +37,8 @@ public class MBEAdapter: KZAdapter, KZDescribable {
 }
 
 public class MBEDevice: KZDevice {
-    var label: String
-    var queue: MBEQueue
+    public var label: String
+    public var queue: MBEQueue
     internal var inner: MTLDevice
     
     public init(queue: MBEQueue, inner: MTLDevice, label: String) {
@@ -169,7 +169,7 @@ public class MBERenderPipeline: KZDescribable {
 
 public class MBECommandEncoder: KZCommandEncoder {
     internal var inner: MTLCommandEncoder?
-    var buffer: MTLCommandBuffer
+    public var buffer: MTLCommandBuffer
     
     public init(inner: MTLCommandEncoder? = nil, buffer: MTLCommandBuffer) {
         self.inner = inner
@@ -199,16 +199,12 @@ public class MBERenderPassEncoder: KZRenderPassEncoder {
         self.inner = inner
     }
     
-    public func setPipeline(_ pipeline: MBERenderPipeline) {
-        
-    }
-    
-    public func end() {
-        
-    }
+    public func setPipeline(_ pipeline: MBERenderPipeline) { inner.setRenderPipelineState(pipeline.inner) }
+    public func end() { inner.endEncoding() }
 
     public func draw(_ vertices: UInt32, _ instances: UInt32, _ firstVertex: UInt32, _ firstInstance: UInt32) {
-        
+        // fix primitive type
+        inner.drawPrimitives(type: .triangle, vertexStart: Int(firstVertex), vertexCount: Int(vertices), instanceCount: Int(instances), baseInstance: Int(firstInstance))
     }
     
     public struct Descriptor {
@@ -217,7 +213,7 @@ public class MBERenderPassEncoder: KZRenderPassEncoder {
 }
 
 public class MBECommandBuffer: KZCommandBuffer {
-    var label: String
+    public var label: String
     internal var inner: MTLCommandBuffer
     
     public init(label: String, inner: MTLCommandBuffer) {
