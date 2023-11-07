@@ -47,6 +47,22 @@ public class MBEDevice: KZDevice {
         self.label = label
     }
     
+    public func createTexture(_ descriptor: MBETexture.Descriptor) -> MBETexture {
+        // More hardcoding!
+        // Fix this, I just want to see a triangle man
+        var metalDescriptor = MTLTextureDescriptor()
+        metalDescriptor.width = 1280
+        metalDescriptor.height = 720
+        metalDescriptor.pixelFormat = .bgra8Unorm
+        metalDescriptor.usage = [.shaderRead, .renderTarget]
+        
+        guard let texture = inner.makeTexture(descriptor: metalDescriptor) else {
+            fatalError("Kinzoku could not create a texture with information provided.")
+        }
+        
+        return MBETexture(label: "Guh", inner: texture)
+    }
+    
     public func createShaderModule(_ descriptor: MBEShaderModule.Descriptor) -> MBEShaderModule {
         // Hard code this for now, should probably have an option to dynamically get a .sprv / .metal file from name
         var metalOptions = MTLCompileOptions()
@@ -185,7 +201,7 @@ public class MBECommandEncoder: KZCommandEncoder {
         metalDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0, green: 0.05, blue: 0, alpha: 1)
         metalDescriptor.colorAttachments[0].storeAction = MTLStoreAction.store
         metalDescriptor.colorAttachments[0].loadAction = MTLLoadAction.clear
-        metalDescriptor.colorAttachments[0].texture = descriptor.texture
+        metalDescriptor.colorAttachments[0].texture = descriptor.texture.inner
         
         guard let encoder = buffer.makeRenderCommandEncoder(descriptor: metalDescriptor) else { fatalError("Kinzoku could not establish a render context.") }
         
@@ -213,11 +229,11 @@ public class MBERenderPassEncoder: KZRenderPassEncoder {
     }
     
     public struct Descriptor {
-        public init(texture: MTLTexture) {
+        public init(texture: MBETexture) {
             self.texture = texture
         }
         
-        var texture: MTLTexture
+        var texture: MBETexture
     }
 }
 
@@ -236,6 +252,20 @@ public class MBECommandBuffer: KZCommandBuffer {
         }
         
         var label: String
+    }
+}
+
+public class MBETexture: KZTexture {
+    public var label: String
+    internal var inner: MTLTexture
+    
+    public init(label: String, inner: MTLTexture) {
+        self.label = label
+        self.inner = inner
+    }
+    
+    public struct Descriptor {
+        public init() {}
     }
 }
 #endif

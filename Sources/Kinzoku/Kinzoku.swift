@@ -34,6 +34,9 @@ protocol KZDevice: KZLabeled, KZDescribable {
     associatedtype Queue: KZQueue
     var queue: Queue { get }
     
+    associatedtype Texture: KZTexture
+    func createTexture(_ descriptor: Texture.Descriptor) -> Texture
+    
     associatedtype ShaderModule: KZDescribable
     associatedtype RenderPipeline: KZDescribable
     func createShaderModule(_ descriptor: ShaderModule.Descriptor) -> ShaderModule
@@ -69,3 +72,5 @@ protocol KZQueue {
     associatedtype CommandBuffer: KZCommandBuffer
     func submit(_ commandBuffers: [CommandBuffer]) // We can associated type this if we want to force KZCommandEncoder to be linked
 }
+
+protocol KZTexture: KZLabeled, KZDescribable {}
